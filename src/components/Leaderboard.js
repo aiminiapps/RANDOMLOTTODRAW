@@ -236,14 +236,12 @@ const RandomLottoLeaderboard = () => {
       </div>
 
       {/* Creative Bar Chart Style Top 3 */}
-      <div className="glass-light rounded-3xl p-6 relative overflow-hidden">
+      <div className="glass rounded-3xl p-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 via-orange-400/5 to-red-400/5 rounded-3xl"></div>
         
         <div className="glass-content relative z-10">
-          <h2 className="text-lg font-bold text-white mb-6 text-center flex items-center justify-center space-x-2">
-            <PiCrownThin className="w-5 h-5 text-yellow-400" />
+          <h2 className="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center space-x-2">
             <span>Top Champions</span>
-            <PiCrownThin className="w-5 h-5 text-yellow-400" />
           </h2>
 
           {/* Creative Bar Chart */}
@@ -259,7 +257,7 @@ const RandomLottoLeaderboard = () => {
                 <div key={actualUser.id} className="flex flex-col items-center">
                   {/* Crown for #1 */}
                   {actualUser.rank === 1 && (
-                    <PiCrownThin className="w-8 h-8 text-yellow-400 mb-2 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)] animate-bounce" />
+                    <PiCrownThin className="w-8 h-8 text-yellow-400 mb-2 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]" />
                   )}
 
                   {/* User Avatar */}
