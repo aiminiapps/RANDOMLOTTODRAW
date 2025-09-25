@@ -705,6 +705,23 @@ function TelegramMiniApp() {
         background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(34, 197, 94, 0.25), transparent 70%), #000000",
       }}
     />
+    <div className="min-h-screen w-full relative">
+  <div
+    className="absolute inset-0 z-0 opacity-35"
+    style={{
+      backgroundImage: `
+        linear-gradient(to right, #0B3D2E 1px, transparent 1px),
+        linear-gradient(to bottom, #0B3D2E 1px, transparent 1px)
+      `,
+      backgroundSize: "22px 22px",
+      WebkitMaskImage:
+        "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+      maskImage:
+        "radial-gradient(ellipse 80% 80% at 100% 0%, #000 50%, transparent 90%)",
+      backgroundColor: "transparent",
+    }}
+  />
+</div>
   
     {/* Your Content/Components */}
   </div>
