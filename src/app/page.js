@@ -253,42 +253,6 @@ const NavigationButtons = ({ setActiveTab, earningTimer, startEarningTimer }) =>
   );
 };
 
-// Debug Panel Component (for development)
-const DebugPanel = ({ user, error, webApp }) => {
-  const [showDebug, setShowDebug] = useState(false);
-
-  if (process.env.NODE_ENV !== 'development') return null;
-
-  return (
-    <div className="fixed top-4 right-4 z-50 hidden">
-      <button
-        onClick={() => setShowDebug(!showDebug)}
-        className="bg-red-600 text-white p-2 rounded text-xs"
-      >
-        Debug
-      </button>
-      {showDebug && (
-        <div className="absolute top-10 right-0 bg-black text-white p-4 rounded text-xs max-w-xs overflow-auto max-h-96">
-          <h4 className="font-bold mb-2">Debug Info:</h4>
-          <p><strong>User:</strong> {user ? '✅' : '❌'}</p>
-          <p><strong>Error:</strong> {error || 'None'}</p>
-          <p><strong>WebApp:</strong> {webApp ? '✅' : '❌'}</p>
-          <p><strong>Platform:</strong> {webApp?.platform || 'Unknown'}</p>
-          <p><strong>Version:</strong> {webApp?.version || 'Unknown'}</p>
-          {user && (
-            <div className="mt-2">
-              <p><strong>User Data:</strong></p>
-              <pre className="text-xs overflow-auto">
-                {JSON.stringify(user, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
 // Main Component
 function TelegramMiniApp() {
   const [activeTab, setActiveTab] = useState('home');
