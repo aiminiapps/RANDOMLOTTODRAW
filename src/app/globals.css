@@ -1,211 +1,233 @@
 @import "tailwindcss";
 
+/* RandomLotto Glass Effect System */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --bg-dark: #000000;
-  --fg-light: #FAFAFA;
-  --primary-yellow: #FFD60A;
-  --secondary-orange: #FF9500;
-  --tertiary-red: #FF3B30;
-  --shadow-purple: #5856D6;
-  --glass-overlay: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --c-glass: #145A32;
+  --c-light: #A3FF12;
+  --c-dark: #0B3D2E;
+  
+  --c-content: #FFFFFF;
+  --c-action: #A3FF12;
+  --c-bg: #0B3D2E;
+  
+  --glass-reflex-dark: 2;
+  --glass-reflex-light: 1.2;
+  --saturation: 180%;
+  
+  /* Lottery-specific variables */
+  --lottery-glow: rgba(163, 255, 18, 0.15);
+  --lottery-shadow: rgba(11, 61, 46, 0.3);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #FAFAFA;
-  }
-}
-
-body {
-  background: linear-gradient(135deg, #000000 0%, #0A0A0A 25%, #000000 50%, #0D0D0D 75%, #000000 100%);
-  color: #FAFAFA;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.tektur {
-  font-family: "Space Grotesk", sans-serif;
-  font-optical-sizing: auto;
-  font-style: normal;
-}
-
-/* Hide scrollbar */
-::-webkit-scrollbar {
-  display: none;
-}
-
-/* Premium Liquid Glass Container */
+/* Advanced Glass Morphism Container */
 .glass {
   position: relative;
-  color: white;
-  backdrop-filter: blur(60px) saturate(200%) brightness(1.05);
-  -webkit-backdrop-filter: blur(60px) saturate(200%) brightness(1.05);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.06) 0%,
-    rgba(255, 255, 255, 0.02) 25%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.03) 75%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
+  background-color: color-mix(in srgb, var(--c-glass) 18%, transparent);
+  backdrop-filter: blur(16px) saturate(var(--saturation));
+  -webkit-backdrop-filter: blur(16px) saturate(var(--saturation));
   border-radius: 20px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
-  border: 0.9px solid rgba(255, 255, 255, 0.12);
+  color: var(--c-content);
+  
+  /* Advanced multi-layer shadows for depth */
+  box-shadow: 
+    /* Inner light reflections */
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 12%), transparent),
+    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 85%), transparent),
+    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 75%), transparent),
+    inset -3px -8px 2px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 55%), transparent),
+    
+    /* Inner dark shadows */
+    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 15%), transparent),
+    inset -2px 3px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 25%), transparent),
+    inset 0px 4px 6px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 22%), transparent),
+    inset 3px -7px 2px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    
+    /* Outer shadows */
+    0px 2px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+    0px 8px 24px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+    0px 16px 48px 0px var(--lottery-shadow);
+  
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  transform: translateZ(0);
-  backdrop-filter: blur(2px);
   isolation: isolate;
 }
 
-/* Hover effects - subtle and premium */
+/* Hover state with lottery excitement */
 .glass:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 255, 255, 0.10) 50%,
-    rgba(255, 255, 255, 0.05) 75%,
-    rgba(255, 255, 255, 0.07) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(80px) saturate(220%) brightness(1.08);
-  -webkit-backdrop-filter: blur(80px) saturate(220%) brightness(1.08);
+  transform: translateY(-2px) scale(1.01);
+  background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+  
+  box-shadow: 
+    /* Enhanced inner reflections */
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 18%), transparent),
+    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 95%), transparent),
+    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 85%), transparent),
+    inset -3px -8px 2px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 65%), transparent),
+    
+    /* Enhanced dark shadows */
+    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    inset -2px 3px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 30%), transparent),
+    inset 0px 4px 6px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 28%), transparent),
+    
+    /* Enhanced outer glow */
+    0px 4px 16px 0px color-mix(in srgb, var(--c-light) 8%, transparent),
+    0px 12px 32px 0px var(--lottery-glow),
+    0px 24px 64px 0px var(--lottery-shadow);
 }
 
-/* Premium texture overlay */
-.glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 30% 20%, 
-    rgba(255, 255, 255, 0.04) 0%,
-    transparent 40%
-  ),
-  radial-gradient(ellipse at 70% 80%, 
-    rgba(255, 255, 255, 0.02) 0%,
-    transparent 40%
-  ),
-  linear-gradient(45deg, 
-    rgba(255, 255, 255, 0.02) 0%,
-    transparent 25%,
-    rgba(255, 255, 255, 0.01) 50%,
-    transparent 75%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
-  border-radius: 20px;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}
-
-/* Subtle edge highlight - Apple style */
-.glass::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, 
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.02) 20%,
-    transparent 50%
-  );
-  border-radius: 20px;
-  pointer-events: none;
-}
-
-/* Premium variants */
-
-/* Variant 1: Ultra-light */
+/* Light variant - for highlighted sections */
 .glass-light {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 255, 255, 0.10) 50%,
-    rgba(255, 255, 255, 0.05) 75%,
-    rgba(255, 255, 255, 0.07) 100%
-  );
-  border: 0.5px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(40px) saturate(180%) brightness(1.08);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.08);
+  background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+  
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 15%), transparent),
+    inset 2.5px 4px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
+    inset -2.5px -3px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
+    inset -4px -10px 3px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    
+    inset -0.8px -2px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 18%), transparent),
+    inset -2.5px 4px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 28%), transparent),
+    
+    0px 3px 10px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 15%), transparent),
+    0px 10px 28px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent);
 }
 
-/* Variant 2: Deep */
+/* Dark variant - for depth sections */
 .glass-dark {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.01) 25%,
-    rgba(255, 255, 255, 0.06) 50%,
-    rgba(255, 255, 255, 0.02) 75%,
-    rgba(255, 255, 255, 0.03) 100%
-  );
-  border: 0.5px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(80px) saturate(220%) brightness(1.02);
-  -webkit-backdrop-filter: blur(80px) saturate(220%) brightness(1.02);
+  background-color: color-mix(in srgb, var(--c-dark) 35%, transparent);
+  
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 8%), transparent),
+    inset 1.5px 2px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 70%), transparent),
+    inset -1.5px -1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
+    
+    inset -1px -3px 10px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 25%), transparent),
+    inset -3px 5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 35%), transparent),
+    
+    0px 6px 18px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent);
 }
 
-/* Variant 3: Warm accent */
+/* Warm variant - for action elements */
 .glass-warm {
-  background: linear-gradient(135deg, 
-    rgba(255, 149, 0, 0.04) 0%,
-    rgba(255, 255, 255, 0.02) 25%,
-    rgba(255, 214, 10, 0.03) 50%,
-    rgba(255, 255, 255, 0.03) 75%,
-    rgba(255, 149, 0, 0.02) 100%
-  );
-  border: 0.5px solid rgba(255, 149, 0, 0.15);
-  backdrop-filter: blur(60px) saturate(200%) brightness(1.06);
-  -webkit-backdrop-filter: blur(60px) saturate(200%) brightness(1.06);
+  background-color: color-mix(in srgb, var(--c-action) 15%, transparent);
+  
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 20%, transparent),
+    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-action) 85%, transparent),
+    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-action) 75%, transparent),
+    inset -3px -8px 2px -5px color-mix(in srgb, var(--c-action) 55%, transparent),
+    
+    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+    
+    0px 4px 12px 0px color-mix(in srgb, var(--c-action) 12%, transparent),
+    0px 12px 36px 0px var(--lottery-glow);
 }
 
 .glass-warm:hover {
-  background: linear-gradient(135deg, 
-    rgba(255, 149, 0, 0.06) 0%,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 214, 10, 0.05) 50%,
-    rgba(255, 255, 255, 0.05) 75%,
-    rgba(255, 149, 0, 0.04) 100%
-  );
-  border-color: rgba(255, 149, 0, 0.22);
+  background-color: color-mix(in srgb, var(--c-action) 22%, transparent);
+  
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 30%, transparent),
+    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-action) 95%, transparent),
+    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-action) 85%, transparent),
+    
+    0px 6px 20px 0px color-mix(in srgb, var(--c-action) 18%, transparent),
+    0px 16px 48px 0px var(--lottery-glow);
 }
 
-/* Variant 4: Cool accent */
+/* Cool variant - for secondary elements */
 .glass-cool {
-  background: linear-gradient(135deg, 
-    rgba(88, 86, 214, 0.04) 0%,
-    rgba(255, 255, 255, 0.02) 25%,
-    rgba(0, 122, 255, 0.03) 50%,
-    rgba(255, 255, 255, 0.03) 75%,
-    rgba(88, 86, 214, 0.02) 100%
-  );
-  border: 0.5px solid rgba(88, 86, 214, 0.15);
-  backdrop-filter: blur(60px) saturate(200%) brightness(1.06);
-  -webkit-backdrop-filter: blur(60px) saturate(200%) brightness(1.06);
+  background-color: color-mix(in srgb, var(--c-glass) 22%, transparent);
+  
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--c-glass) 25%, transparent),
+    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-glass) 80%, transparent),
+    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-glass) 70%, transparent),
+    
+    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 18%), transparent),
+    
+    0px 3px 10px 0px color-mix(in srgb, var(--c-glass) 8%, transparent),
+    0px 10px 32px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent);
 }
 
-.glass-cool:hover {
-  background: linear-gradient(135deg, 
-    rgba(88, 86, 214, 0.06) 0%,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(0, 122, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0.05) 75%,
-    rgba(88, 86, 214, 0.04) 100%
-  );
-  border-color: rgba(88, 86, 214, 0.22);
+/* Premium Glass Button with Advanced Effects */
+.glass-button {
+  position: relative;
+  background-color: color-mix(in srgb, var(--c-action) 25%, transparent);
+  backdrop-filter: blur(12px) saturate(var(--saturation));
+  -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
+  border-radius: 14px;
+  padding: 1rem 1.5rem;
+  color: var(--c-dark);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  border: none;
+  isolation: isolate;
+  
+  /* Multi-layer button shadows */
+  box-shadow: 
+    /* Inner highlights */
+    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 40%, transparent),
+    inset 1.5px 2px 0px -1px color-mix(in srgb, var(--c-action) 90%, transparent),
+    inset -1.5px -1.5px 0px -1px color-mix(in srgb, var(--c-action) 80%, transparent),
+    inset -2px -6px 1px -4px color-mix(in srgb, var(--c-action) 60%, transparent),
+    
+    /* Inner shadows */
+    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) 25%, transparent),
+    inset 0px 2px 3px -1px color-mix(in srgb, var(--c-dark) 20%, transparent),
+    
+    /* Outer glow */
+    0px 2px 6px 0px color-mix(in srgb, var(--c-action) 15%, transparent),
+    0px 8px 24px 0px var(--lottery-glow);
+  
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-button:hover {
+  transform: translateY(-1px) scale(1.02);
+  background-color: color-mix(in srgb, var(--c-action) 35%, transparent);
+  
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 50%, transparent),
+    inset 1.5px 2px 0px -1px color-mix(in srgb, var(--c-action) 95%, transparent),
+    inset -1.5px -1.5px 0px -1px color-mix(in srgb, var(--c-action) 85%, transparent),
+    
+    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) 30%, transparent),
+    
+    0px 4px 12px 0px color-mix(in srgb, var(--c-action) 20%, transparent),
+    0px 12px 36px 0px var(--lottery-glow),
+    0px 20px 60px 0px color-mix(in srgb, var(--c-action) 8%, transparent);
+}
+
+.glass-button:active {
+  transform: translateY(0) scale(1);
+  background-color: color-mix(in srgb, var(--c-action) 20%, transparent);
+  
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 30%, transparent),
+    inset 1px 1px 0px -1px color-mix(in srgb, var(--c-action) 80%, transparent),
+    
+    inset -1px -2px 6px 0px color-mix(in srgb, var(--c-dark) 35%, transparent),
+    
+    0px 1px 3px 0px color-mix(in srgb, var(--c-action) 10%, transparent);
+}
+
+/* Lottery-specific pulsing animation */
+@keyframes lottery-pulse {
+  0%, 100% { 
+    box-shadow: 
+      0px 4px 12px 0px color-mix(in srgb, var(--c-action) 15%, transparent),
+      0px 12px 36px 0px var(--lottery-glow);
+  }
+  50% { 
+    box-shadow: 
+      0px 6px 18px 0px color-mix(in srgb, var(--c-action) 25%, transparent),
+      0px 16px 48px 0px color-mix(in srgb, var(--c-action) 20%, transparent);
+  }
 }
 
 /* Content wrapper */
@@ -214,144 +236,36 @@ body {
   z-index: 10;
 }
 
-/* Premium button with liquid glass effect */
-.glass-button {
-  position: relative;
-  backdrop-filter: blur(40px) saturate(180%) brightness(1.08);
-  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.08);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.10) 0%,
-    rgba(255, 255, 255, 0.05) 25%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0.07) 75%,
-    rgba(255, 255, 255, 0.08) 100%
-  );
-  border: 0.5px solid rgba(255, 255, 255, 0.18);
-  border-radius: 14px;
-  padding: 1rem 1.5rem;
-  color: #FAFAFA;
-  font-weight: 500;
-  font-size: 0.95rem;
-  letter-spacing: -0.01em;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-  cursor: pointer;
-  isolation: isolate;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Button texture overlay */
-.glass-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.05) 0%,
-    transparent 30%,
-    rgba(255, 255, 255, 0.02) 70%,
-    transparent 100%
-  );
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  border-radius: 14px;
-}
-
-/* Button highlight */
-.glass-button::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 30%;
-  background: linear-gradient(180deg, 
-    rgba(255, 255, 255, 0.08) 0%,
-    transparent 100%
-  );
-  border-radius: 14px 14px 0 0;
-  pointer-events: none;
-}
-
-.glass-button:hover {
-  transform: translateY(-0.5px);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.08) 25%,
-    rgba(255, 255, 255, 0.16) 50%,
-    rgba(255, 255, 255, 0.10) 75%,
-    rgba(255, 255, 255, 0.12) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(50px) saturate(200%) brightness(1.12);
-  -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.12);
-}
-
-.glass-button:hover::before {
-  opacity: 1;
-}
-
-.glass-button:active {
-  transform: translateY(0);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 255, 255, 0.10) 50%,
-    rgba(255, 255, 255, 0.06) 75%,
-    rgba(255, 255, 255, 0.07) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-/* Micro-interactions for premium feel */
-@media (hover: hover) {
-  .glass {
-    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  .glass-button {
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-}
-
-/* Enhanced accessibility */
+/* Accessibility and performance optimizations */
 @media (prefers-reduced-motion: reduce) {
   .glass,
   .glass-button {
     transition: none;
   }
   
-  .glass:hover {
-    transform: none;
-  }
-  
+  .glass:hover,
   .glass-button:hover {
     transform: none;
   }
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: high) {
   .glass {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: color-mix(in srgb, var(--c-glass) 40%, transparent);
+    box-shadow: 0 0 0 2px var(--c-light);
   }
   
   .glass-button {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background-color: color-mix(in srgb, var(--c-action) 50%, transparent);
+    box-shadow: 0 0 0 2px var(--c-action);
   }
 }
 
 /* Focus states for accessibility */
 .glass-button:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.4);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.07) 25%,
-    rgba(255, 255, 255, 0.14) 50%,
-    rgba(255, 255, 255, 0.09) 75%,
-    rgba(255, 255, 255, 0.10) 100%
-  );
+  box-shadow: 
+    0 0 0 3px color-mix(in srgb, var(--c-action) 30%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 50%, transparent),
+    0px 4px 12px 0px color-mix(in srgb, var(--c-action) 20%, transparent);
 }
