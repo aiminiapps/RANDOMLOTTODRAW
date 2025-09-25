@@ -23,6 +23,8 @@ import MultiAgentChatHub from '@/components/MultiAgentChatHub';
 import { GoTasklist } from "react-icons/go";
 import TaskCenter from '@/components/TaskCenter';
 import ProjectInfo from '@/components/Info';
+import { FaInfo } from "react-icons/fa6";
+
 
 // Earning Timer Component
 const EarningTimer = () => {
@@ -533,81 +535,12 @@ function TelegramMiniApp() {
           
           {/* Menu Button */}
           <div className="relative flex items-center gap-2">
-            <Link href='/?tab=task2' className='glass-light flex items-center gap-0.5 font-semibold text-sm text-[#FF7A1A] p-2 rounded-full backdrop-blur-xs transition-all duration-200 active:scale-95 hover:bg-white/5'>
+            <Link href='/?tab=task2' className='glass-light flex items-center gap-0.5 font-semibold text-sm text-green-400 p-2 rounded-full backdrop-blur-[1px] transition-all duration-200 active:scale-95 hover:bg-white/5'>
             <GoTasklist size={25}/> Tasks
             </Link>
-            <button
-              ref={buttonRef}
-              onClick={toggleMenu}
-              className='glass-light p-2 rounded-full backdrop-blur-xs transition-all duration-200 active:scale-95 hover:bg-white/5'
-              type="button"
-              aria-label="Menu"
-              aria-expanded={isMenuOpen}
-            >
-              <motion.div
-                animate={{ rotate: isMenuOpen ? 90 : 0 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-              >
-                <CiMenuKebab size={25} />
-              </motion.div>
-            </button>
-            
-            {/* Popup Menu */}
-            <AnimatePresence>
-              {isMenuOpen && (
-                <motion.div
-                  ref={menuRef}
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 top-full mt-2 z-50"
-                >
-                  <div className="glass-blue backdrop-blur-sm rounded-2xl p-1 min-w-[160px] shadow-xl border border-white/10">
-                    
-                    {/* Share Option  /?tab=invite*/}
-                    <Link
-                      href="/?tab=invite"
-                      className="w-full flex bg-green-500/10 items-center gap-3 p-3 rounded-xl hover:bg-white/5 active:bg-white/10 transition-all duration-200 text-left group"
-                    >
-                      <div className="p-1.5 rounded-lg glass-dark transition-all duration-200">
-                        <LiaUserFriendsSolid size={16} className="text-red-400" />
-                      </div>
-                      <span className="text-gray-200 text-sm font-medium">Invite Friends</span>
-                    </Link>
-                    
-                    {/* Divider */}
-                    <div className="h-px bg-white/5 mx-2 my-1"/>
-                    {/* Share Option  /?tab=invite*/}
-                    <button
-                      onClick={handleShare}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 active:bg-white/10 transition-all duration-200 text-left group"
-                      type="button"
-                    >
-                      <div className="p-1.5 rounded-lg glass-dark transition-all duration-200">
-                        <IoShareSocial size={16} className="text-blue-400" />
-                      </div>
-                      <span className="text-gray-200 text-sm font-medium">Share App</span>
-                    </button>
-                    
-                    {/* Divider */}
-                    <div className="h-px bg-white/5 mx-2 my-1"/>
-                    
-                    {/* Copy Link Option */}
-                    <button
-                      onClick={handleCopyLink}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 active:bg-white/10 transition-all duration-200 text-left group"
-                      type="button"
-                    >
-                      <div className="p-1.5 rounded-lg glass-light transition-all duration-200">
-                        <IoLink size={16} className="text-green-400" />
-                      </div>
-                      <span className="text-gray-200 text-sm font-medium">Copy Link</span>
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <Link href='/?tab=info' className='glass-dark flex items-center gap-0.5 font-semibold text-sm text-[#FF7A1A] p-3 rounded-full backdrop-blur-[1px] transition-all duration-200 active:scale-95 hover:bg-white/5'>
+            <FaInfo size={20} className='text-gray-400'/>
+            </Link>
           </div>
         </div>
       </div>
