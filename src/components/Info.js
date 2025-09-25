@@ -113,22 +113,22 @@ const ProjectInfo = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full max-w-md mx-auto space-y-6"
+      className="w-full max-w-md mx-auto space-y-6 pb-20"
     >
       {/* Hero Section */}
       <motion.div variants={itemVariants} className="glass space-y-4">
         <div className="glass-content">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-10 h-10 glass-warm rounded-xl flex items-center justify-center">
-              <FiZap className="w-5 h-5" style={{ color: '#0B3D2E' }} />
+              <FiZap className="w-5 h-5 text-[#A3FF12]" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white tracking-tight">RandomLotto Draw</h1>
-              <p className="text-sm text-gray-300 font-medium">Blockchain-Powered Lottery</p>
+              <p className="text-sm text-gray-400 font-medium">Blockchain-Powered Lottery</p>
             </div>
           </div>
           
-          <p className="text-sm leading-relaxed text-gray-200 font-medium">
+          <p className="text-sm leading-relaxed text-gray-300 font-medium">
             Revolutionary lottery platform combining blockchain transparency with global accessibility, 
             ensuring fair draws and rewarding all participants through innovative tokenomics.
           </p>
@@ -136,15 +136,15 @@ const ProjectInfo = () => {
       </motion.div>
 
       {/* Vision & Mission */}
-      <motion.div variants={itemVariants} className="glass-light space-y-4">
+      <motion.div variants={itemVariants} className=" space-y-4">
         <div className="glass-content">
           <h2 className="text-base font-bold text-white mb-4 flex items-center space-x-2">
             <FiTarget className="w-4 h-4" style={{ color: '#A3FF12' }} />
             <span>Vision & Mission</span>
           </h2>
           
-          <div className="space-y-3">
-            <div className="glass-dark rounded-2xl p-4">
+          <div className="">
+            <div className="glass rounded-2xl p-4">
               <h3 className="text-sm font-semibold text-white mb-2">Vision</h3>
               <p className="text-xs leading-relaxed text-gray-300">
                 Become the world's most trusted global lottery platform powered by blockchain technology, 
@@ -152,7 +152,7 @@ const ProjectInfo = () => {
               </p>
             </div>
             
-            <div className="glass-dark rounded-2xl p-4">
+            <div className="glass rounded-2xl p-4">
               <h3 className="text-sm font-semibold text-white mb-2">Mission</h3>
               <p className="text-xs leading-relaxed text-gray-300">
                 Provide low-barrier lottery participation with verifiable draws, sustainable token economy, 
@@ -176,7 +176,7 @@ const ProjectInfo = () => {
               <motion.div
                 key={index}
                 variants={itemVariants}
-                className="glass-cool rounded-2xl p-4 hover:glass-warm transition-all duration-500"
+                className="glass-light rounded-2xl p-4 hover:glass-warm transition-all duration-500"
               >
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 glass-dark rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -184,7 +184,7 @@ const ProjectInfo = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold text-white mb-1">{feature.title}</h3>
-                    <p className="text-xs leading-relaxed text-gray-300">{feature.description}</p>
+                    <p className="text-xs leading-relaxed text-gray-400">{feature.description}</p>
                   </div>
                 </div>
               </motion.div>
@@ -194,7 +194,7 @@ const ProjectInfo = () => {
       </motion.div>
 
       {/* Value Propositions */}
-      <motion.div variants={itemVariants} className="glass-dark space-y-4">
+      <motion.div variants={itemVariants} className="glass space-y-4">
         <div className="glass-content">
           <h2 className="text-base font-bold text-white mb-4 flex items-center space-x-2">
             <FiCheckCircle className="w-4 h-4" style={{ color: '#A3FF12' }} />
@@ -214,7 +214,7 @@ const ProjectInfo = () => {
                   </div>
                   <h3 className="text-xs font-semibold text-white">{prop.title}</h3>
                 </div>
-                <p className="text-xs text-gray-300 leading-tight">{prop.value}</p>
+                <p className="text-xs text-gray-400 leading-tight">{prop.value}</p>
               </motion.div>
             ))}
           </div>
@@ -222,7 +222,7 @@ const ProjectInfo = () => {
       </motion.div>
 
       {/* Tokenomics */}
-      <motion.div variants={itemVariants} className="glass-warm space-y-4">
+      <motion.div variants={itemVariants} className=" space-y-4">
         <div className="glass-content">
           <h2 className="text-base font-bold text-white mb-4 flex items-center space-x-2">
             <FiDollarSign className="w-4 h-4" style={{ color: '#0B3D2E' }} />
@@ -230,7 +230,7 @@ const ProjectInfo = () => {
           </h2>
           
           <div className="space-y-3">
-            <div className="glass-dark rounded-2xl p-4">
+            <div className="glass rounded-2xl p-4">
               <p className="text-xs text-gray-300 leading-relaxed mb-3">
                 <strong className="text-white">Reward System:</strong> All participants receive RLT tokens 
                 immediately upon joining, creating value for everyone regardless of draw outcomes.
@@ -253,7 +253,7 @@ const ProjectInfo = () => {
       </motion.div>
 
       {/* How It Works */}
-      <motion.div variants={itemVariants} className="glass-light space-y-4">
+      <motion.div variants={itemVariants} className=" space-y-4">
         <div className="glass-content">
           <h2 className="text-base font-bold text-white mb-4 flex items-center space-x-2">
             <IoBarChartOutline className="w-4 h-4" style={{ color: '#A3FF12' }} />
@@ -268,7 +268,7 @@ const ProjectInfo = () => {
               { step: '4', text: 'Smart contract executes verifiable random draw', color: '#F59E0B' },
               { step: '5', text: 'Winners receive USDT rewards, all keep RLT tokens', color: '#EC4899' }
             ].map((step, index) => (
-              <div key={index} className="flex items-start space-x-3 glass-dark rounded-2xl p-3">
+              <div key={index} className="flex items-start glass-light backdrop-blur-[1px] space-x-3 glass-dark rounded-2xl p-3">
                 <div 
                   className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
                   style={{ 
@@ -287,7 +287,7 @@ const ProjectInfo = () => {
       </motion.div>
 
       {/* Disclaimer */}
-      <motion.div variants={itemVariants} className="glass-cool space-y-4">
+      <motion.div variants={itemVariants} className="space-y-4 pb-10">
         <div className="glass-content">
           <h2 className="text-xs font-semibold text-white mb-3 flex items-center space-x-2">
             <FiLock className="w-3 h-3" style={{ color: '#A3FF12' }} />
