@@ -141,7 +141,7 @@ const RandomLottoLeaderboard = () => {
   // Loading state
   if (animationStage === 'loading') {
     return (
-      <div className="w-full max-w-md mx-auto space-y-4 p-6">
+      <div className="w-full mx-auto space-y-4 py-6">
         <div className="glass rounded-3xl p-6">
           <div className="flex items-center space-x-4 mb-6">
             <div className="w-12 h-12 glass-dark rounded-2xl animate-pulse"></div>
@@ -181,9 +181,9 @@ const RandomLottoLeaderboard = () => {
   const remaining = leaderboardData.slice(3);
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-5">
+    <div className="w-full mx-auto space-y-5">
       {/* Creative Header */}
-      <div className="glass-warm rounded-3xl p-6 relative overflow-hidden">
+      <div className="glass rounded-3xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-400/10 to-transparent rounded-full blur-2xl"></div>
         
         <div className="glass-content relative z-10">
@@ -194,11 +194,11 @@ const RandomLottoLeaderboard = () => {
                 <div className="absolute inset-0 rounded-2xl bg-yellow-400/20 animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-xl font-black text-white tracking-tight">Champions League</h1>
+                <h1 className="text-lg font-bold text-white tracking-tight">Champions League</h1>
                 <p className="text-sm text-gray-300 flex items-center space-x-2">
                   <FiUsers className="w-4 h-4 text-green-400" />
-                  <span className="font-bold text-green-400">{totalUsers.toLocaleString()}</span>
-                  <span>Lottery Players</span>
+                  <span className="font-semibold text-green-400">{totalUsers.toLocaleString()}</span>
+                  <span className='text-[10px]'>Lottery Players</span>
                 </p>
               </div>
             </div>
@@ -220,13 +220,13 @@ const RandomLottoLeaderboard = () => {
                 <button
                   key={filter.id}
                   onClick={() => setSelectedFilter(filter.id)}
-                  className={`flex-1 p-3 rounded-2xl text-sm font-bold transition-all duration-300 flex items-center justify-center space-x-2 ${
+                  className={`flex-1 p-3 rounded-2xl text-sm font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
                     selectedFilter === filter.id
-                      ? 'glass-button text-white transform scale-105'
-                      : 'glass-dark text-gray-400 hover:text-white hover:scale-102'
+                      ? 'glass-light text-white transform scale-105'
+                      : 'glass-dark text-gray-200 hover:text-white hover:scale-102'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
+                  {/* <IconComponent className="w-4 h-4" /> */}
                   <span>{filter.label}</span>
                 </button>
               );
