@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* RandomLotto Glass Effect System */
+/* Enhanced Liquid Glass Effect System for RandomLotto */
 :root {
   --c-glass: #145A32;
   --c-light: #A3FF12;
@@ -10,224 +10,422 @@
   --c-action: #A3FF12;
   --c-bg: #0B3D2E;
   
-  --glass-reflex-dark: 2;
-  --glass-reflex-light: 1.2;
-  --saturation: 180%;
+  --glass-reflex-dark: 1.5;
+  --glass-reflex-light: 0.8;
+  --saturation: 160%;
   
-  /* Lottery-specific variables */
-  --lottery-glow: rgba(163, 255, 18, 0.15);
-  --lottery-shadow: rgba(11, 61, 46, 0.3);
+  /* Liquid glass variables - very subtle */
+  --liquid-base: rgba(20, 90, 50, 0.03);
+  --liquid-surface: rgba(163, 255, 18, 0.02);
+  --liquid-highlight: rgba(255, 255, 255, 0.08);
+  --liquid-shadow: rgba(11, 61, 46, 0.15);
 }
 
-/* Advanced Glass Morphism Container */
+/* Core Liquid Glass Container */
 .glass {
   position: relative;
-  background-color: color-mix(in srgb, var(--c-glass) 18%, transparent);
-  backdrop-filter: blur(16px) saturate(var(--saturation));
-  -webkit-backdrop-filter: blur(16px) saturate(var(--saturation));
-  border-radius: 20px;
+  background: 
+    /* Liquid surface reflections */
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.05) 0%,
+      transparent 25%,
+      rgba(20, 90, 50, 0.02) 45%,
+      transparent 55%,
+      rgba(163, 255, 18, 0.015) 75%,
+      transparent 100%
+    ),
+    /* Base liquid layer */
+    linear-gradient(180deg,
+      rgba(20, 90, 50, 0.04) 0%,
+      rgba(20, 90, 50, 0.02) 50%,
+      rgba(20, 90, 50, 0.03) 100%
+    );
+  
+  backdrop-filter: blur(20px) saturate(var(--saturation)) brightness(1.02);
+  -webkit-backdrop-filter: blur(20px) saturate(var(--saturation)) brightness(1.02);
+  border-radius: 24px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
   color: var(--c-content);
-  
-  /* Advanced multi-layer shadows for depth */
-  box-shadow: 
-    /* Inner light reflections */
-    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 12%), transparent),
-    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 85%), transparent),
-    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 75%), transparent),
-    inset -3px -8px 2px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 55%), transparent),
-    
-    /* Inner dark shadows */
-    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 15%), transparent),
-    inset -2px 3px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 25%), transparent),
-    inset 0px 4px 6px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 22%), transparent),
-    inset 3px -7px 2px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
-    
-    /* Outer shadows */
-    0px 2px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
-    0px 8px 24px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
-    0px 16px 48px 0px var(--lottery-shadow);
-  
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   isolation: isolate;
+  
+  /* Liquid glass border effect */
+  border: 0.5px solid transparent;
+  background-clip: padding-box;
+  
+  /* Multi-layer liquid shadows */
+  box-shadow: 
+    /* Inner liquid highlights - very subtle */
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02),
+    inset -1px 0 0 rgba(255, 255, 255, 0.02),
+    
+    /* Inner liquid depth */
+    inset 2px 2px 4px rgba(11, 61, 46, 0.08),
+    inset -2px -2px 4px rgba(163, 255, 18, 0.03),
+    
+    /* Outer liquid glow */
+    0 2px 8px rgba(11, 61, 46, 0.06),
+    0 8px 32px rgba(11, 61, 46, 0.04),
+    0 16px 64px rgba(20, 90, 50, 0.02);
+  
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Hover state with lottery excitement */
+/* Liquid surface animation */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    /* Flowing liquid texture */
+    radial-gradient(ellipse 400px 140px at 50% 0%, 
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 40%,
+      transparent 70%
+    ),
+    radial-gradient(ellipse 300px 100px at 20% 80%, 
+      rgba(163, 255, 18, 0.03) 0%,
+      rgba(163, 255, 18, 0.01) 50%,
+      transparent 80%
+    ),
+    radial-gradient(ellipse 200px 80px at 80% 20%, 
+      rgba(20, 90, 50, 0.04) 0%,
+      rgba(20, 90, 50, 0.01) 60%,
+      transparent 90%
+    );
+  border-radius: 24px;
+  opacity: 1;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+/* Liquid border effect */
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: -0.5px;
+  background: linear-gradient(45deg, 
+    rgba(163, 255, 18, 0.08) 0%,
+    rgba(20, 90, 50, 0.05) 25%,
+    rgba(255, 255, 255, 0.04) 50%,
+    rgba(20, 90, 50, 0.05) 75%,
+    rgba(163, 255, 18, 0.08) 100%
+  );
+  border-radius: 24px;
+  z-index: -1;
+  opacity: 0.6;
+  transition: opacity 0.6s ease;
+}
+
+/* Enhanced liquid hover state */
 .glass:hover {
-  transform: translateY(-2px) scale(1.01);
-  background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+  transform: translateY(-1px);
+  
+  background: 
+    /* Enhanced liquid reflections */
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 20%,
+      rgba(20, 90, 50, 0.03) 40%,
+      transparent 50%,
+      rgba(163, 255, 18, 0.025) 70%,
+      transparent 100%
+    ),
+    linear-gradient(180deg,
+      rgba(20, 90, 50, 0.06) 0%,
+      rgba(20, 90, 50, 0.03) 50%,
+      rgba(20, 90, 50, 0.05) 100%
+    );
+  
+  backdrop-filter: blur(24px) saturate(calc(var(--saturation) + 20%)) brightness(1.04);
+  -webkit-backdrop-filter: blur(24px) saturate(calc(var(--saturation) + 20%)) brightness(1.04);
   
   box-shadow: 
-    /* Enhanced inner reflections */
-    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 18%), transparent),
-    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 95%), transparent),
-    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 85%), transparent),
-    inset -3px -8px 2px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 65%), transparent),
+    /* Enhanced inner highlights */
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 1px 0 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    inset -1px 0 0 rgba(255, 255, 255, 0.04),
     
-    /* Enhanced dark shadows */
-    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
-    inset -2px 3px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 30%), transparent),
-    inset 0px 4px 6px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 28%), transparent),
+    /* Enhanced depth */
+    inset 3px 3px 6px rgba(11, 61, 46, 0.10),
+    inset -3px -3px 6px rgba(163, 255, 18, 0.05),
     
     /* Enhanced outer glow */
-    0px 4px 16px 0px color-mix(in srgb, var(--c-light) 8%, transparent),
-    0px 12px 32px 0px var(--lottery-glow),
-    0px 24px 64px 0px var(--lottery-shadow);
+    0 4px 16px rgba(11, 61, 46, 0.08),
+    0 12px 48px rgba(163, 255, 18, 0.04),
+    0 24px 96px rgba(20, 90, 50, 0.03);
 }
 
-/* Light variant - for highlighted sections */
+.glass:hover::before {
+  opacity: 1.2;
+}
+
+.glass:hover::after {
+  opacity: 0.8;
+}
+
+/* Light liquid variant */
 .glass-light {
-  background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+  background: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 30%,
+      rgba(163, 255, 18, 0.02) 70%,
+      transparent 100%
+    ),
+    linear-gradient(180deg,
+      rgba(20, 90, 50, 0.05) 0%,
+      rgba(20, 90, 50, 0.025) 50%,
+      rgba(20, 90, 50, 0.04) 100%
+    );
+  
+  backdrop-filter: blur(16px) saturate(140%) brightness(1.06);
+  -webkit-backdrop-filter: blur(16px) saturate(140%) brightness(1.06);
   
   box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 15%), transparent),
-    inset 2.5px 4px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent),
-    inset -2.5px -3px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent),
-    inset -4px -10px 3px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
-    
-    inset -0.8px -2px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 18%), transparent),
-    inset -2.5px 4px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 28%), transparent),
-    
-    0px 3px 10px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 15%), transparent),
-    0px 10px 28px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 1px 0 0 rgba(255, 255, 255, 0.05),
+    inset 2px 2px 4px rgba(11, 61, 46, 0.06),
+    inset -2px -2px 4px rgba(163, 255, 18, 0.04),
+    0 2px 12px rgba(11, 61, 46, 0.04),
+    0 8px 32px rgba(20, 90, 50, 0.02);
 }
 
-/* Dark variant - for depth sections */
+/* Dark liquid variant */
 .glass-dark {
-  background-color: color-mix(in srgb, var(--c-dark) 35%, transparent);
+  background: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.03) 0%,
+      transparent 40%,
+      rgba(11, 61, 46, 0.04) 80%,
+      transparent 100%
+    ),
+    linear-gradient(180deg,
+      rgba(11, 61, 46, 0.08) 0%,
+      rgba(11, 61, 46, 0.04) 50%,
+      rgba(11, 61, 46, 0.06) 100%
+    );
+  
+  backdrop-filter: blur(24px) saturate(180%) brightness(0.98);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(0.98);
   
   box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 8%), transparent),
-    inset 1.5px 2px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 70%), transparent),
-    inset -1.5px -1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent),
-    
-    inset -1px -3px 10px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 25%), transparent),
-    inset -3px 5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 35%), transparent),
-    
-    0px 6px 18px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 1px 0 0 rgba(255, 255, 255, 0.03),
+    inset 2px 2px 6px rgba(11, 61, 46, 0.12),
+    inset -2px -2px 6px rgba(163, 255, 18, 0.02),
+    0 4px 16px rgba(11, 61, 46, 0.08),
+    0 12px 48px rgba(11, 61, 46, 0.06);
 }
 
-/* Warm variant - for action elements */
+/* Warm liquid variant */
 .glass-warm {
-  background-color: color-mix(in srgb, var(--c-action) 15%, transparent);
+  background: 
+    linear-gradient(135deg, 
+      rgba(163, 255, 18, 0.04) 0%,
+      transparent 25%,
+      rgba(255, 255, 255, 0.03) 50%,
+      transparent 75%,
+      rgba(163, 255, 18, 0.02) 100%
+    ),
+    linear-gradient(180deg,
+      rgba(163, 255, 18, 0.03) 0%,
+      rgba(20, 90, 50, 0.02) 50%,
+      rgba(163, 255, 18, 0.025) 100%
+    );
+  
+  backdrop-filter: blur(18px) saturate(170%) brightness(1.03);
+  -webkit-backdrop-filter: blur(18px) saturate(170%) brightness(1.03);
   
   box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 20%, transparent),
-    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-action) 85%, transparent),
-    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-action) 75%, transparent),
-    inset -3px -8px 2px -5px color-mix(in srgb, var(--c-action) 55%, transparent),
-    
-    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
-    
-    0px 4px 12px 0px color-mix(in srgb, var(--c-action) 12%, transparent),
-    0px 12px 36px 0px var(--lottery-glow);
+    inset 0 1px 0 rgba(163, 255, 18, 0.12),
+    inset 1px 0 0 rgba(163, 255, 18, 0.06),
+    inset 2px 2px 4px rgba(11, 61, 46, 0.08),
+    inset -2px -2px 4px rgba(163, 255, 18, 0.06),
+    0 2px 12px rgba(163, 255, 18, 0.06),
+    0 8px 32px rgba(163, 255, 18, 0.04);
 }
 
 .glass-warm:hover {
-  background-color: color-mix(in srgb, var(--c-action) 22%, transparent);
+  background: 
+    linear-gradient(135deg, 
+      rgba(163, 255, 18, 0.06) 0%,
+      transparent 20%,
+      rgba(255, 255, 255, 0.04) 45%,
+      transparent 70%,
+      rgba(163, 255, 18, 0.03) 100%
+    ),
+    linear-gradient(180deg,
+      rgba(163, 255, 18, 0.04) 0%,
+      rgba(20, 90, 50, 0.025) 50%,
+      rgba(163, 255, 18, 0.035) 100%
+    );
   
   box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 30%, transparent),
-    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-action) 95%, transparent),
-    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-action) 85%, transparent),
-    
-    0px 6px 20px 0px color-mix(in srgb, var(--c-action) 18%, transparent),
-    0px 16px 48px 0px var(--lottery-glow);
+    inset 0 1px 0 rgba(163, 255, 18, 0.15),
+    inset 1px 0 0 rgba(163, 255, 18, 0.08),
+    inset 2px 2px 4px rgba(11, 61, 46, 0.10),
+    inset -2px -2px 4px rgba(163, 255, 18, 0.08),
+    0 4px 16px rgba(163, 255, 18, 0.08),
+    0 12px 40px rgba(163, 255, 18, 0.06);
 }
 
-/* Cool variant - for secondary elements */
+/* Cool liquid variant */
 .glass-cool {
-  background-color: color-mix(in srgb, var(--c-glass) 22%, transparent);
+  background: 
+    linear-gradient(135deg, 
+      rgba(20, 90, 50, 0.04) 0%,
+      transparent 30%,
+      rgba(255, 255, 255, 0.02) 60%,
+      transparent 100%
+    ),
+    linear-gradient(180deg,
+      rgba(20, 90, 50, 0.05) 0%,
+      rgba(20, 90, 50, 0.025) 50%,
+      rgba(20, 90, 50, 0.04) 100%
+    );
+  
+  backdrop-filter: blur(20px) saturate(150%) brightness(1.01);
+  -webkit-backdrop-filter: blur(20px) saturate(150%) brightness(1.01);
   
   box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--c-glass) 25%, transparent),
-    inset 2px 3px 0px -1px color-mix(in srgb, var(--c-glass) 80%, transparent),
-    inset -2px -2px 0px -1px color-mix(in srgb, var(--c-glass) 70%, transparent),
-    
-    inset -0.5px -1px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 18%), transparent),
-    
-    0px 3px 10px 0px color-mix(in srgb, var(--c-glass) 8%, transparent),
-    0px 10px 32px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent);
+    inset 0 1px 0 rgba(20, 90, 50, 0.15),
+    inset 1px 0 0 rgba(20, 90, 50, 0.08),
+    inset 2px 2px 4px rgba(11, 61, 46, 0.10),
+    inset -2px -2px 4px rgba(20, 90, 50, 0.06),
+    0 2px 12px rgba(20, 90, 50, 0.06),
+    0 8px 32px rgba(20, 90, 50, 0.04);
 }
 
-/* Premium Glass Button with Advanced Effects */
+/* Premium Liquid Glass Button */
 .glass-button {
   position: relative;
-  background-color: color-mix(in srgb, var(--c-action) 25%, transparent);
-  backdrop-filter: blur(12px) saturate(var(--saturation));
-  -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
-  border-radius: 14px;
+  background: 
+    /* Button liquid surface */
+    linear-gradient(135deg, 
+      rgba(163, 255, 18, 0.08) 0%,
+      rgba(163, 255, 18, 0.12) 25%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(163, 255, 18, 0.10) 75%,
+      rgba(163, 255, 18, 0.08) 100%
+    ),
+    linear-gradient(180deg,
+      rgba(163, 255, 18, 0.15) 0%,
+      rgba(163, 255, 18, 0.08) 50%,
+      rgba(163, 255, 18, 0.12) 100%
+    );
+  
+  backdrop-filter: blur(16px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(16px) saturate(160%) brightness(1.05);
+  border-radius: 16px;
   padding: 1rem 1.5rem;
-  color: var(--c-dark);
+  color: rgba(11, 61, 46, 0.9);
   font-weight: 600;
   font-size: 0.95rem;
   letter-spacing: -0.01em;
   cursor: pointer;
   border: none;
   isolation: isolate;
+  overflow: hidden;
   
-  /* Multi-layer button shadows */
+  /* Button liquid shadows */
   box-shadow: 
-    /* Inner highlights */
-    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 40%, transparent),
-    inset 1.5px 2px 0px -1px color-mix(in srgb, var(--c-action) 90%, transparent),
-    inset -1.5px -1.5px 0px -1px color-mix(in srgb, var(--c-action) 80%, transparent),
-    inset -2px -6px 1px -4px color-mix(in srgb, var(--c-action) 60%, transparent),
+    /* Inner liquid highlights */
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 1px 0 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(163, 255, 18, 0.12),
+    inset -1px 0 0 rgba(163, 255, 18, 0.08),
     
-    /* Inner shadows */
-    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) 25%, transparent),
-    inset 0px 2px 3px -1px color-mix(in srgb, var(--c-dark) 20%, transparent),
+    /* Inner depth */
+    inset 2px 2px 4px rgba(11, 61, 46, 0.06),
+    inset -2px -2px 4px rgba(163, 255, 18, 0.08),
     
     /* Outer glow */
-    0px 2px 6px 0px color-mix(in srgb, var(--c-action) 15%, transparent),
-    0px 8px 24px 0px var(--lottery-glow);
+    0 2px 8px rgba(163, 255, 18, 0.10),
+    0 8px 24px rgba(163, 255, 18, 0.06),
+    0 16px 48px rgba(163, 255, 18, 0.04);
   
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Button liquid ripple effect */
+.glass-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 50% 0%, 
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 60%
+    ),
+    radial-gradient(circle at 0% 100%, 
+      rgba(163, 255, 18, 0.06) 0%,
+      transparent 50%
+    );
+  border-radius: 16px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
 .glass-button:hover {
-  transform: translateY(-1px) scale(1.02);
-  background-color: color-mix(in srgb, var(--c-action) 35%, transparent);
+  transform: translateY(-0.5px) scale(1.01);
+  
+  background: 
+    linear-gradient(135deg, 
+      rgba(163, 255, 18, 0.12) 0%,
+      rgba(163, 255, 18, 0.16) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(163, 255, 18, 0.14) 75%,
+      rgba(163, 255, 18, 0.12) 100%
+    ),
+    linear-gradient(180deg,
+      rgba(163, 255, 18, 0.20) 0%,
+      rgba(163, 255, 18, 0.12) 50%,
+      rgba(163, 255, 18, 0.16) 100%
+    );
+  
+  backdrop-filter: blur(20px) saturate(180%) brightness(1.08);
+  -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.08);
   
   box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 50%, transparent),
-    inset 1.5px 2px 0px -1px color-mix(in srgb, var(--c-action) 95%, transparent),
-    inset -1.5px -1.5px 0px -1px color-mix(in srgb, var(--c-action) 85%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(163, 255, 18, 0.15),
+    inset -1px 0 0 rgba(163, 255, 18, 0.10),
     
-    inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) 30%, transparent),
+    inset 2px 2px 4px rgba(11, 61, 46, 0.08),
+    inset -2px -2px 4px rgba(163, 255, 18, 0.12),
     
-    0px 4px 12px 0px color-mix(in srgb, var(--c-action) 20%, transparent),
-    0px 12px 36px 0px var(--lottery-glow),
-    0px 20px 60px 0px color-mix(in srgb, var(--c-action) 8%, transparent);
+    0 4px 16px rgba(163, 255, 18, 0.15),
+    0 12px 36px rgba(163, 255, 18, 0.10),
+    0 24px 72px rgba(163, 255, 18, 0.06);
+}
+
+.glass-button:hover::before {
+  opacity: 1;
 }
 
 .glass-button:active {
-  transform: translateY(0) scale(1);
-  background-color: color-mix(in srgb, var(--c-action) 20%, transparent);
+  transform: translateY(0) scale(0.99);
+  
+  background: 
+    linear-gradient(135deg, 
+      rgba(163, 255, 18, 0.06) 0%,
+      rgba(163, 255, 18, 0.10) 50%,
+      rgba(163, 255, 18, 0.08) 100%
+    );
   
   box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 30%, transparent),
-    inset 1px 1px 0px -1px color-mix(in srgb, var(--c-action) 80%, transparent),
-    
-    inset -1px -2px 6px 0px color-mix(in srgb, var(--c-dark) 35%, transparent),
-    
-    0px 1px 3px 0px color-mix(in srgb, var(--c-action) 10%, transparent);
-}
-
-/* Lottery-specific pulsing animation */
-@keyframes lottery-pulse {
-  0%, 100% { 
-    box-shadow: 
-      0px 4px 12px 0px color-mix(in srgb, var(--c-action) 15%, transparent),
-      0px 12px 36px 0px var(--lottery-glow);
-  }
-  50% { 
-    box-shadow: 
-      0px 6px 18px 0px color-mix(in srgb, var(--c-action) 25%, transparent),
-      0px 16px 48px 0px color-mix(in srgb, var(--c-action) 20%, transparent);
-  }
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 2px 2px 6px rgba(11, 61, 46, 0.12),
+    inset -1px -1px 3px rgba(163, 255, 18, 0.08),
+    0 1px 4px rgba(163, 255, 18, 0.08);
 }
 
 /* Content wrapper */
@@ -236,7 +434,7 @@
   z-index: 10;
 }
 
-/* Accessibility and performance optimizations */
+/* Accessibility optimizations */
 @media (prefers-reduced-motion: reduce) {
   .glass,
   .glass-button {
@@ -247,25 +445,30 @@
   .glass-button:hover {
     transform: none;
   }
+  
+  .glass::before,
+  .glass-button::before {
+    transition: none;
+  }
 }
 
 @media (prefers-contrast: high) {
   .glass {
-    background-color: color-mix(in srgb, var(--c-glass) 40%, transparent);
-    box-shadow: 0 0 0 2px var(--c-light);
+    background: rgba(20, 90, 50, 0.15);
+    box-shadow: 0 0 0 1px rgba(163, 255, 18, 0.3);
   }
   
   .glass-button {
-    background-color: color-mix(in srgb, var(--c-action) 50%, transparent);
-    box-shadow: 0 0 0 2px var(--c-action);
+    background: rgba(163, 255, 18, 0.25);
+    box-shadow: 0 0 0 1px rgba(163, 255, 18, 0.5);
   }
 }
 
-/* Focus states for accessibility */
+/* Focus states */
 .glass-button:focus {
   outline: none;
   box-shadow: 
-    0 0 0 3px color-mix(in srgb, var(--c-action) 30%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--c-action) 50%, transparent),
-    0px 4px 12px 0px color-mix(in srgb, var(--c-action) 20%, transparent);
+    0 0 0 2px rgba(163, 255, 18, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 2px 8px rgba(163, 255, 18, 0.10);
 }
