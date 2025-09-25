@@ -355,13 +355,13 @@ const RandomLottoLeaderboard = () => {
               <div className="glass-content">
                 <div className="flex items-center space-x-4">
                   {/* Rank */}
-                  <div className="w-8 h-8 glass-dark rounded-xl flex items-center justify-center font-bold text-sm text-white">
+                  {/* <div className="w-8 h-8 glass-dark rounded-xl flex items-center justify-center font-bold text-sm text-white">
                     {user.rank}
-                  </div>
+                  </div> */}
 
                   {/* Avatar */}
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-gray-600/30">
+                    <div className="w-12 h-12 rounded-full scale-115 overflow-hidden border-2 border-gray-600/30">
                       <img 
                         src={user.avatar}
                         alt={user.username}
