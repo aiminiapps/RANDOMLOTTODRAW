@@ -8,7 +8,6 @@ import { useStore } from '@/lib/storage';
 import { useTelegram } from '@/lib/useTelegram';
 import CustomLoader from '@/components/Loader';
 import BottomNav from '@/components/BottomNav';
-import Agent from '@/components/Agent';
 import InviteCenter from '@/components/InviteCenter';
 import DataCenterHome from '@/components/DataCenterHome';
 import { CheckCircle } from 'lucide-react';
@@ -639,7 +638,7 @@ function TelegramMiniApp() {
         // return <CoinAgent />;
         return <PremiumLeaderboard/>;
       case 'SPAI':
-        return <Agent />;
+        // return <Agent />;
       case 'task':
         return <MultiAgentChatHub/>;
       case 'task2':
