@@ -49,7 +49,7 @@
   color: var(--c-content);
   overflow: hidden;
   isolation: isolate;
-  
+  backdrop-filter: blur(1px);
   /* Liquid glass border effect */
   border: 0.5px solid transparent;
   background-clip: padding-box;
