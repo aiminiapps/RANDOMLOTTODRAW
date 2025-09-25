@@ -438,7 +438,7 @@ const RandomLottoLeaderboard = () => {
       </div>
 
       {/* Creative Current User Card */}
-      <div className="glass-warm rounded-3xl p-6 relative overflow-hidden border-2 border-green-400/30">
+      <div className="glass rounded-3xl p-6 relative overflow-hidden border-2 border-green-400/30">
         <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 via-blue-400/5 to-purple-400/10 rounded-3xl"></div>
         <div className="absolute top-0 left-0 w-24 h-24 bg-green-400/20 rounded-full blur-2xl"></div>
         
@@ -504,13 +504,8 @@ const RandomLottoLeaderboard = () => {
         </div>
       </div>
 
-      {/* Load More */}
-      <button className="glass-button w-full py-4 rounded-2xl text-sm font-bold text-white hover:scale-102 transition-transform duration-200">
-        Load More Players
-      </button>
-
       {/* Disclaimer */}
-      <div className="glass-cool rounded-2xl p-4">
+      <div className="glass-cool rounded-2xl p-4 pb-20">
         <div className="glass-content">
           <p className="text-xs text-center text-gray-400 leading-relaxed">
             🎲 Leaderboard reflects simulated lottery data for demonstration purposes
