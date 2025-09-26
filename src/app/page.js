@@ -17,6 +17,7 @@ import MultiAgentChatHub from '@/components/MultiAgentChatHub';
 import { GoTasklist } from "react-icons/go";
 import ProjectInfo from '@/components/Info';
 import { FaInfo } from "react-icons/fa6";
+import TaskCenter from '@/components/TaskCenter';
 
 
 // Earning Timer Component
@@ -492,7 +493,7 @@ function TelegramMiniApp() {
           
           {/* Menu Button */}
           <div className="relative flex items-center gap-2">
-            <Link href='/?tab=task2' className='glass-light flex items-center gap-0.5 font-semibold text-sm text-green-400 p-2 rounded-full backdrop-blur-[1px] transition-all duration-200 active:scale-95 hover:bg-white/5'>
+            <Link href='/?tab=task' className='glass-light flex items-center gap-0.5 font-semibold text-sm text-green-400 p-2 rounded-full backdrop-blur-[1px] transition-all duration-200 active:scale-95 hover:bg-white/5'>
             <GoTasklist size={25}/> Tasks
             </Link>
             <Link href='/?tab=info' className='glass-dark flex items-center gap-0.5 font-semibold text-sm text-[#FF7A1A] p-3 rounded-full backdrop-blur-[1px] transition-all duration-200 active:scale-95 hover:bg-white/5'>
@@ -529,7 +530,7 @@ function TelegramMiniApp() {
       case 'SPAI':
         // return <Agent />;
       case 'task':
-        return <MultiAgentChatHub/>;
+        return <TaskCenter/>;
       case 'info':
         return <ProjectInfo/>;
       case 'invite':
