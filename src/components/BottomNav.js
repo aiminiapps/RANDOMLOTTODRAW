@@ -28,25 +28,6 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
         }
     ];
 
-    // Generate particles for background effect
-    useEffect(() => {
-        const generateParticles = () => {
-            const newParticles = [];
-            for (let i = 0; i < 12; i++) {
-                newParticles.push({
-                    id: i,
-                    x: Math.random() * 100,
-                    y: Math.random() * 100,
-                    size: Math.random() * 4 + 2,
-                    duration: Math.random() * 3 + 2,
-                    delay: Math.random() * 2
-                });
-            }
-            setParticles(newParticles);
-        };
-        generateParticles();
-    }, []);
-
     // Create particle components
     const ParticleEffect = () => (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
