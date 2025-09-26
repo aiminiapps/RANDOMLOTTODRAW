@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -8,8 +7,6 @@ import { FiHome } from "react-icons/fi";
 import { GoTrophy } from "react-icons/go";
 
 export default function PortiqBottomNav({ activeTab, setActiveTab }) {
-    const [isVisible, setIsVisible] = useState(true);
-    const [particles, setParticles] = useState([]);
 
     const navItems = [
         { 
@@ -27,47 +24,17 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
             position: 'right'
         }
     ];
-
-    // Create particle components
-    const ParticleEffect = () => (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {particles.map((particle) => (
-                <motion.div
-                    key={particle.id}
-                    className="absolute rounded-full bg-green-400/20"
-                    style={{
-                        left: `${particle.x}%`,
-                        top: `${particle.y}%`,
-                        width: particle.size,
-                        height: particle.size,
-                    }}
-                    animate={{
-                        y: [0, -20, 0],
-                        opacity: [0.2, 0.6, 0.2],
-                        scale: [1, 1.2, 1],
-                    }}
-                    transition={{
-                        duration: particle.duration,
-                        delay: particle.delay,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                />
-            ))}
-        </div>
-    );
-
     return (
         <motion.div 
-            className="w-full max-w-md mx-3 bottomnav backdrop-blur-xl py-4 relative"
+            className="w-full max-w-md  bottomnav relative"
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
         >
             {/* Creative Container with Hard Shadow */}
-            <div className="relative px-6">
+            <div className="relative px-10">
                 <div 
-                    className="glass rounded-3xl p-2 relative overflow-hidden"
+                    className="glass rounded-3xl backdrop-blur-2xl relative overflow-hidden"
                     style={{
                         background: `linear-gradient(135deg, 
                             rgba(20, 90, 50, 0.08) 0%, 
@@ -79,11 +46,11 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
                             inset 0 1px 0 rgba(163, 255, 18, 0.1),
                             inset 0 -1px 0 rgba(11, 61, 46, 0.2)
                         `,
-                        border: '0.5px solid rgba(163, 255, 18, 0.15)'
+                        border: '0.5px solid rgba(163, 255, 18, 0.15)',
+                        padding:'4px',
+                        backdropFilter:'blur(5px)'
                     }}
                 >
-                    {/* Particle Background Effect */}
-                    <ParticleEffect />
                     
                     {/* Liquid Glass Toggle Track */}
                     <div className="relative flex items-center h-16 rounded-3xl overflow-hidden">
@@ -134,26 +101,6 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
                                         transparent 70%)`
                                 }}
                             />
-                            
-                            {/* Liquid Surface Effect */}
-                            <motion.div
-                                className="absolute inset-0 rounded-2xl"
-                                style={{
-                                    background: `linear-gradient(45deg,
-                                        rgba(255, 255, 255, 0.08) 0%,
-                                        transparent 30%,
-                                        rgba(163, 255, 18, 0.06) 60%,
-                                        transparent 100%)`
-                                }}
-                                animate={{
-                                    opacity: [0.5, 0.8, 0.5],
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                            />
                         </motion.div>
 
                         {/* Navigation Items */}
@@ -174,7 +121,7 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
                                             className={cn(
                                                 "flex items-center justify-center mb-1 transition-all duration-300 relative",
                                                 activeTab === item.id 
-                                                    ? "text-white drop-shadow-[0_0_8px_rgba(163,255,18,0.8)]" 
+                                                    ? "text-white" 
                                                     : "text-gray-400"
                                             )}
                                             animate={{
@@ -182,20 +129,6 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
                                             }}
                                             transition={{ duration: 0.2 }}
                                         >
-                                            {/* Active Icon Glow */}
-                                            {activeTab === item.id && (
-                                                <motion.div
-                                                    className="absolute inset-0 rounded-full"
-                                                    style={{
-                                                        background: `radial-gradient(circle,
-                                                            rgba(163, 255, 18, 0.3) 0%,
-                                                            transparent 70%)`
-                                                    }}
-                                                    initial={{ scale: 0.5, opacity: 0 }}
-                                                    animate={{ scale: 1.5, opacity: 1 }}
-                                                    transition={{ duration: 0.3 }}
-                                                />
-                                            )}
                                             {item.icon}
                                         </motion.div>
 
@@ -217,26 +150,6 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
                                 </motion.div>
                             ))}
                         </div>
-
-                        {/* Edge Highlight Effects */}
-                        <div 
-                            className="absolute left-0 top-0 w-1 h-full rounded-l-3xl opacity-60"
-                            style={{
-                                background: `linear-gradient(to bottom,
-                                    rgba(163, 255, 18, 0.3) 0%,
-                                    rgba(163, 255, 18, 0.1) 50%,
-                                    rgba(163, 255, 18, 0.3) 100%)`
-                            }}
-                        />
-                        <div 
-                            className="absolute right-0 top-0 w-1 h-full rounded-r-3xl opacity-60"
-                            style={{
-                                background: `linear-gradient(to bottom,
-                                    rgba(163, 255, 18, 0.3) 0%,
-                                    rgba(163, 255, 18, 0.1) 50%,
-                                    rgba(163, 255, 18, 0.3) 100%)`
-                            }}
-                        />
                     </div>
 
                     {/* Bottom Reflection */}
@@ -249,20 +162,10 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
                         }}
                     />
                 </div>
-
-                {/* Hard Shadow Base */}
-                <div 
-                    className="absolute inset-0 rounded-3xl -z-10"
-                    style={{
-                        background: 'rgba(11, 61, 46, 0.15)',
-                        transform: 'translateY(4px) scale(0.98)',
-                        filter: 'blur(2px)'
-                    }}
-                />
                 
                 {/* Secondary Shadow */}
                 <div 
-                    className="absolute inset-0 rounded-3xl -z-20"
+                    className="absolute  inset-0 rounded-3xl -z-20"
                     style={{
                         background: 'rgba(11, 61, 46, 0.08)',
                         transform: 'translateY(8px) scale(0.95)',
@@ -270,25 +173,6 @@ export default function PortiqBottomNav({ activeTab, setActiveTab }) {
                     }}
                 />
             </div>
-
-            {/* Ambient Light Effect */}
-            <motion.div
-                className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-32 h-16 rounded-full opacity-20 pointer-events-none"
-                style={{
-                    background: `radial-gradient(ellipse,
-                        rgba(163, 255, 18, 0.4) 0%,
-                        transparent 70%)`
-                }}
-                animate={{
-                    opacity: [0.1, 0.3, 0.1],
-                    scale: [0.8, 1.2, 0.8],
-                }}
-                transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                }}
-            />
         </motion.div>
     );
 }
