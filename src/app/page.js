@@ -11,7 +11,6 @@ import BottomNav from '@/components/BottomNav';
 import InviteCenter from '@/components/InviteCenter';
 import DataCenterHome from '@/components/DataCenterHome';
 import { CheckCircle } from 'lucide-react';
-import InteractivePeerReview from '@/components/InteractivePeerReview';
 import PremiumLeaderboard from '@/components/Leaderboard';
 import Link from 'next/link';
 import MultiAgentChatHub from '@/components/MultiAgentChatHub';
@@ -509,7 +508,6 @@ function TelegramMiniApp() {
     <div className="space-y-6">
       <DataCenterHome />
       <SocialTask />
-      <InteractivePeerReview/>
       {/* <EarningTimer /> */}
       <UserBalance />
       {/* <NavigationButtons
