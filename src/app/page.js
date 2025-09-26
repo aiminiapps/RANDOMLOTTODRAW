@@ -11,17 +11,11 @@ import BottomNav from '@/components/BottomNav';
 import InviteCenter from '@/components/InviteCenter';
 import DataCenterHome from '@/components/DataCenterHome';
 import { CheckCircle } from 'lucide-react';
-import { CiMenuKebab } from "react-icons/ci";
-import { motion, AnimatePresence } from 'framer-motion';
-import { IoShareSocial, IoLink } from 'react-icons/io5';
-import LabelXNetworkGlobe from '@/components/ui/globe';
 import InteractivePeerReview from '@/components/InteractivePeerReview';
 import PremiumLeaderboard from '@/components/Leaderboard';
 import Link from 'next/link';
-import { LiaUserFriendsSolid } from "react-icons/lia";
 import MultiAgentChatHub from '@/components/MultiAgentChatHub';
 import { GoTasklist } from "react-icons/go";
-import TaskCenter from '@/components/TaskCenter';
 import ProjectInfo from '@/components/Info';
 import { FaInfo } from "react-icons/fa6";
 
@@ -513,7 +507,6 @@ function TelegramMiniApp() {
   
   const renderHomeContent = () => (
     <div className="space-y-6">
-      <LabelXNetworkGlobe/>
       <DataCenterHome />
       <SocialTask />
       <InteractivePeerReview/>
