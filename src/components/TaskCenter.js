@@ -5,13 +5,10 @@ import { useStore } from '@/lib/storage';
 import Image from 'next/image';
 import { 
   FiGift, 
-  FiTarget, 
   FiUsers, 
   FiTwitter, 
   FiShare2, 
-  FiStar,
   FiZap,
-  FiTrendingUp,
   FiCheckCircle,
   FiClock,
   FiDollarSign
@@ -42,22 +39,6 @@ const TaskCenter = () => {
     }
   };
 
-  const RandomLottoIcon = ({ variant = 'default' }) => {
-    const variants = {
-      default: 'bg-gradient-to-br from-green-400 to-emerald-500',
-      daily: 'bg-gradient-to-br from-yellow-400 to-orange-500',
-      social: 'bg-gradient-to-br from-blue-400 to-cyan-500',
-      invite: 'bg-gradient-to-br from-purple-400 to-pink-500'
-    };
-
-    return (
-      <div className={`w-12 h-12 ${variants[variant]} rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden`}>
-        <Image src='/agent/agentlogo.png' alt='logo' width={32} height={32} />
-        <div className="absolute inset-0 bg-white/20 animate-pulse rounded-2xl"></div>
-      </div>
-    );
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -80,18 +61,17 @@ const TaskCenter = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="text-white w-full max-w-md mx-auto"
+      className="text-white w-full mx-auto"
     >
       {/* Creative Header */}
-      <motion.div variants={itemVariants} className="glass-warm rounded-3xl p-6 mb-6 relative overflow-hidden">
+      <motion.div variants={itemVariants} className="glass rounded-3xl p-6 mb-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-400/10 to-transparent rounded-full blur-2xl"></div>
         
         <div className="glass-content relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 glass-light rounded-3xl flex items-center justify-center relative">
-                <FiTarget className="w-7 h-7 text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                <div className="absolute inset-0 rounded-3xl bg-green-400/20 animate-pulse"></div>
+              <div className="w-14 h-14 glass-light rounded-full flex items-center justify-center relative">
+              <Image src='/agent/agentlogo.png' alt='logo' width={52} height={52} />
               </div>
               <div>
                 <h2 className="text-2xl font-black text-white tracking-tight">Mission Center</h2>
@@ -101,22 +81,14 @@ const TaskCenter = () => {
                 </p>
               </div>
             </div>
-            
-            <div className="glass-cool px-4 py-2 rounded-2xl">
-              <div className="text-lg font-bold text-green-400">+2.5K</div>
-              <div className="text-xs text-gray-400">Available</div>
-            </div>
           </div>
         </div>
       </motion.div>
 
       {/* Daily Tasks Section */}
       <motion.div variants={itemVariants} className="mb-6">
-        <div className="glass-light rounded-2xl p-5 mb-4">
+        <div className="glass rounded-2xl p-5 mb-4">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center">
-              <FiStar className="w-5 h-5 text-white" />
-            </div>
             <div>
               <h3 className="text-lg font-bold text-white">Daily Missions</h3>
               <p className="text-sm text-gray-400">Reset every 24 hours</p>
@@ -135,7 +107,6 @@ const TaskCenter = () => {
             <div className="glass-content relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-4">
-                  <RandomLottoIcon variant="daily" />
                   <div>
                     <h4 className="text-white font-bold">Daily Check-In</h4>
                     <div className="flex items-center space-x-2">
@@ -163,7 +134,7 @@ const TaskCenter = () => {
               {!tasks.dailyReward.completed && (
                 <button
                   onClick={() => handleTask('dailyReward', 100)}
-                  className="glass-button w-full py-3 rounded-xl font-bold text-white hover:scale-105 transition-all duration-300"
+                  className="glass-button w-full py-3 rounded-xl font-bold hover:scale-105 transition-all duration-300"
                 >
                   <FiGift className="w-4 h-4 inline mr-2" />
                   Claim Daily Bonus
@@ -179,7 +150,6 @@ const TaskCenter = () => {
             <div className="glass-content relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-4">
-                  <RandomLottoIcon variant="social" />
                   <div>
                     <h4 className="text-white font-bold">Share Our Post</h4>
                     <div className="flex items-center space-x-2">
@@ -220,11 +190,8 @@ const TaskCenter = () => {
 
       {/* Optional Tasks Section */}
       <motion.div variants={itemVariants} className="mb-6">
-        <div className="glass-dark rounded-2xl p-5">
+        <div className="glass rounded-2xl p-5">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center">
-              <FiTrendingUp className="w-5 h-5 text-white" />
-            </div>
             <div>
               <h3 className="text-lg font-bold text-white">Bonus Challenges</h3>
               <p className="text-sm text-gray-400">Complete for extra rewards</p>
@@ -242,7 +209,6 @@ const TaskCenter = () => {
             <div className="glass-content relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-4">
-                  <RandomLottoIcon variant="social" />
                   <div>
                     <h4 className="text-white font-bold">Follow on X</h4>
                     <div className="flex items-center space-x-2">
@@ -291,7 +257,6 @@ const TaskCenter = () => {
             <div className="glass-content relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-4">
-                  <RandomLottoIcon variant="invite" />
                   <div>
                     <h4 className="text-white font-bold">Invite 5 Friends</h4>
                     <div className="flex items-center space-x-2">
@@ -331,7 +296,7 @@ const TaskCenter = () => {
       </motion.div>
 
       {/* Pass Purchase Section */}
-      <motion.div variants={itemVariants} className="glass-warm rounded-3xl p-6 mb-6 relative overflow-hidden">
+      <motion.div variants={itemVariants} className="glass rounded-3xl p-6 mb-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 via-blue-400/5 to-purple-400/10 rounded-3xl"></div>
         
         <div className="glass-content relative z-10">
@@ -380,9 +345,6 @@ const TaskCenter = () => {
                 <div className="flex items-center justify-center space-x-1 text-purple-400">
                   <FiDollarSign className="w-4 h-4" />
                   <span className="text-sm font-bold">2K RLT</span>
-                </div>
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                  SAVE 20%
                 </div>
               </div>
             </button>
