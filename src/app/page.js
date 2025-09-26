@@ -524,7 +524,7 @@ function TelegramMiniApp() {
     switch (activeTab) {
       case 'home':
         return renderHomeContent();
-      case 'dataCenter':
+      case 'leaderboard':
         return <PremiumLeaderboard/>;
       case 'task':
         return <TaskCenter/>;
