@@ -525,10 +525,7 @@ function TelegramMiniApp() {
       case 'home':
         return renderHomeContent();
       case 'dataCenter':
-        // return <CoinAgent />;
         return <PremiumLeaderboard/>;
-      case 'SPAI':
-        // return <Agent />;
       case 'task':
         return <TaskCenter/>;
       case 'info':
