@@ -643,7 +643,7 @@ const RandomLottoParticipationEngine = () => {
     >
       {/* Wrong Network Warning for EVM */}
       {!isTelegram && isWrongNetwork && (
-        <div className="glass-dark border-2 border-yellow-400/30 rounded-2xl p-4">
+        <div className="glass border-2 border-yellow-400/30 rounded-2xl p-4">
           <div className="flex items-center space-x-2 mb-3">
             <FiAlertTriangle className="w-5 h-5 text-yellow-400" />
             <p className="text-yellow-400 font-bold">Wrong Network</p>
@@ -661,7 +661,7 @@ const RandomLottoParticipationEngine = () => {
       )}
 
       {/* Wallet Header */}
-      <div className="glass-light rounded-3xl p-6">
+      <div className="glass rounded-3xl p-6">
         <div className="glass-content">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
@@ -784,7 +784,7 @@ const RandomLottoParticipationEngine = () => {
                   `https://bscscan.com/address/${walletAddress}`;
                 window.open(explorerUrl, '_blank');
               }}
-              className="glass py-3 rounded-2xl font-bold text-white border-2 border-gray-600/30 hover:border-green-400/50 transition-all duration-300"
+              className="glass-button py-3 rounded-2xl font-bold text-white border-2 border-gray-600/30 hover:border-green-400/50 transition-all duration-300"
             >
               <div className="flex items-center justify-center space-x-2">
                 <FiExternalLink className="w-4 h-4" />
@@ -852,7 +852,7 @@ const RandomLottoParticipationEngine = () => {
       )}
 
       {/* Pool Status */}
-      <div className="glass-cool rounded-2xl p-6">
+      <div className="glass rounded-2xl p-6">
         <div className="glass-content">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
             <FiTarget className="w-5 h-5 text-blue-400" />
