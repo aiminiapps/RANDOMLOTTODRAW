@@ -176,7 +176,7 @@ const SocialTask = () => {
           </div>
           <div>
             <h3 className="text-white font-semibold">Join official X</h3>
-            <p className="text-gray-300 text-xs">Follow on X for 1,000 LBLX Points</p>
+            <p className="text-gray-300 text-xs">Follow on X for 1,000 Points</p>
           </div>
         </div>
         <button
