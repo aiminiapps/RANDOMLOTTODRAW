@@ -31,7 +31,7 @@ if (typeof window !== 'undefined' && !window.__WEB3MODAL_INITIALIZED__) {
 
 export default function Web3Provider({ children, initialState }) {
   return (
-    <TonConnectUIProvider manifestUrl="https://finja-chi.vercel.app/tonconnect-manifest.json">
+    <TonConnectUIProvider manifestUrl="https://randomlottodraw.vercel.app/tonconnect-manifest.json">
       <WagmiProvider config={config} initialState={initialState}>
         <QueryClientProvider client={queryClient}>
           {children}
