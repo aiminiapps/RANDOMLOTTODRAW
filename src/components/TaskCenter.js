@@ -71,7 +71,7 @@ const TaskCenter = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-14 h-14 glass-light rounded-full flex items-center justify-center relative">
-              <Image src='/agent/agentlogo.png' alt='logo' width={52} height={52} />
+              <Image src='/agent/agentlogo.png' alt='logo' width={52} height={52} className="rounded-lg bg-white" />
               </div>
               <div>
                 <h2 className="text-2xl font-black text-white tracking-tight">Mission Center</h2>

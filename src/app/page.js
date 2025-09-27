@@ -483,7 +483,7 @@ function TelegramMiniApp() {
               width={40} 
               height={40} 
               priority
-              className="rounded-lg"
+              className="rounded-lg bg-white"
             />
             <div className="text-left">
               <p className="text-gray-300 text-sm">Welcome</p>
