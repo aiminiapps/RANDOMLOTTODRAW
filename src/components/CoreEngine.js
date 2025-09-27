@@ -22,7 +22,9 @@ import {
   FiCalendar,
   FiClock,
   FiShoppingCart,
-  FiCopy
+  FiCopy,
+  FiFilm,
+  FiScissors
 } from 'react-icons/fi';
 import { CiWallet } from "react-icons/ci";
 import { useAccount, useBalance, useDisconnect, useSwitchChain } from 'wagmi';
@@ -33,6 +35,9 @@ import { bsc } from 'wagmi/chains';
 
 // RLT Token Contract Configuration
 const RLT_CONTRACT_ADDRESS = '0x27FDc94c04Ea70D3B9FEFd1fB8f5508f94f6a815';
+
+// TON RLT Token Contract (hypothetical - you'd need the actual TON RLT contract)
+const TON_RLT_CONTRACT = 'EQC...'; // Your RLT token contract on TON
 
 const RandomLottoParticipationEngine = () => {
   // Wagmi hooks for EVM wallets
@@ -57,12 +62,12 @@ const RandomLottoParticipationEngine = () => {
   const isWalletConnected = isTelegram ? !!tonWallet : isConnected;
   const walletAddress = isTelegram ? tonWallet?.account?.address : address;
 
-  // Balance State (Real + Simulated)
+  // Balance State (Real RLT only, no native tokens)
   const [balanceState, setBalanceState] = useState({
-    realRLT: '0',
-    simulatedRLT: '0',
-    nativeBalance: '0',
-    isLoading: false
+    rltBalance: '0',
+    nativeBalance: '0', // For gas fees only
+    isLoading: false,
+    tonRltBalance: '0' // RLT on TON network
   });
 
   // Participation State
@@ -70,10 +75,11 @@ const RandomLottoParticipationEngine = () => {
     amount: '',
     isParticipating: false,
     poolTotal: '0',
-    poolThreshold: '1000',
+    poolThreshold: '50000',
     myTickets: 0,
     myPasses: [],
-    participationHistory: []
+    participationHistory: [],
+    demoTickets: [] // Demo tickets for users without RLT
   });
 
   // App State
@@ -111,35 +117,80 @@ const RandomLottoParticipationEngine = () => {
     }
   }, []);
 
+  // Mock function to get TON RLT balance (replace with actual TON RLT contract call)
+  const getTonRltBalance = useCallback(async (address) => {
+    // Mock implementation - replace with actual TON RLT balance fetching
+    try {
+      // This would be replaced with actual TON RLT contract call
+      // For now, return 0 to simulate no RLT on TON
+      return '0';
+    } catch (error) {
+      console.error('Failed to fetch TON RLT balance:', error);
+      return '0';
+    }
+  }, []);
+
   // Update balances when wallet connects
   useEffect(() => {
-    if (walletAddress) {
-      if (isTelegram) {
-        // TON wallet - set mock balance
-        setBalanceState({
-          realRLT: '0', // TON doesn't have RLT
-          simulatedRLT: '0',
-          nativeBalance: '0', // Would need TON balance API
-          isLoading: false
-        });
+    const updateBalances = async () => {
+      if (walletAddress) {
+        if (isTelegram) {
+          // TON wallet - get RLT balance on TON network
+          const tonRlt = await getTonRltBalance(walletAddress);
+          setBalanceState({
+            rltBalance: '0', // No EVM RLT on TON
+            nativeBalance: '0', // TON native balance would be fetched separately
+            tonRltBalance: tonRlt,
+            isLoading: false
+          });
+        } else {
+          // EVM wallet - use real RLT balance on BSC
+          setBalanceState({
+            rltBalance: rltBalance ? formatUnits(rltBalance.value, rltBalance.decimals) : '0',
+            nativeBalance: bnbBalance ? formatEther(bnbBalance.value) : '0',
+            tonRltBalance: '0',
+            isLoading: false
+          });
+        }
       } else {
-        // EVM wallet - use real balances
         setBalanceState({
-          realRLT: rltBalance ? formatUnits(rltBalance.value, rltBalance.decimals) : '0',
-          simulatedRLT: appState.simulatedBalances[walletAddress.toLowerCase()] || '0',
-          nativeBalance: bnbBalance ? formatEther(bnbBalance.value) : '0',
+          rltBalance: '0',
+          nativeBalance: '0',
+          tonRltBalance: '0',
           isLoading: false
         });
       }
-    } else {
-      setBalanceState({
-        realRLT: '0',
-        simulatedRLT: '0',
-        nativeBalance: '0',
-        isLoading: false
-      });
+    };
+
+    updateBalances();
+  }, [walletAddress, rltBalance, bnbBalance, isTelegram, getTonRltBalance]);
+
+  // Generate demo tickets for users without RLT
+  useEffect(() => {
+    if (walletAddress && !participationState.demoTickets.length) {
+      const currentRltBalance = isTelegram ? 
+        parseFloat(balanceState.tonRltBalance) : 
+        parseFloat(balanceState.rltBalance);
+      
+      // If user has no RLT, generate demo tickets
+      if (currentRltBalance === 0) {
+        const demoTickets = Array.from({ length: 3 }, (_, index) => ({
+          id: `DEMO-${Date.now()}-${index}`,
+          type: 'demo',
+          tickets: 1,
+          network: isTelegram ? 'TON' : 'BSC',
+          purchaseDate: new Date(),
+          isDemo: true,
+          status: 'demo'
+        }));
+        
+        setParticipationState(prev => ({
+          ...prev,
+          demoTickets
+        }));
+      }
     }
-  }, [walletAddress, rltBalance, bnbBalance, appState.simulatedBalances, isTelegram]);
+  }, [walletAddress, balanceState.rltBalance, balanceState.tonRltBalance, isTelegram, participationState.demoTickets.length]);
 
   // Switch to BSC Network
   const switchToBSC = useCallback(async () => {
@@ -157,13 +208,18 @@ const RandomLottoParticipationEngine = () => {
   const generatePassId = () => {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substr(2, 6);
-    const network = isTelegram ? 'TON' : 'RLT';
-    return `${network}-${timestamp.toString(36).toUpperCase()}-${random.toUpperCase()}`;
+    const network = isTelegram ? 'TON' : 'BSC';
+    return `RLT-${network}-${timestamp.toString(36).toUpperCase()}-${random.toUpperCase()}`;
   };
 
   // Generate pass pattern
-  const generatePassPattern = (passId) => {
+  const generatePassPattern = (passId, isDemo = false) => {
     const seed = passId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    
+    if (isDemo) {
+      return 'repeating-linear-gradient(45deg, rgba(100,100,100,0.1) 0px, rgba(100,100,100,0.1) 10px, transparent 10px, transparent 20px)';
+    }
+    
     const patterns = [
       'repeating-linear-gradient(45deg, rgba(163,255,18,0.1) 0px, rgba(163,255,18,0.1) 10px, transparent 10px, transparent 20px)',
       'repeating-linear-gradient(90deg, rgba(163,255,18,0.05) 0px, rgba(163,255,18,0.05) 15px, transparent 15px, transparent 30px)',
@@ -173,14 +229,14 @@ const RandomLottoParticipationEngine = () => {
     return patterns[seed % patterns.length];
   };
 
-  // Purchase Pass
+  // Purchase Pass with RLT
   const purchasePass = useCallback(() => {
-    const requiredAmount = isTelegram ? 1.0 : 500; // 1 TON or 500 RLT
-    const currentBalance = isTelegram ? 
-      parseFloat(balanceState.nativeBalance) : 
-      parseFloat(balanceState.realRLT);
+    const requiredRLT = 500; // 500 RLT for a pass
+    const currentRltBalance = isTelegram ? 
+      parseFloat(balanceState.tonRltBalance) : 
+      parseFloat(balanceState.rltBalance);
     
-    if (currentBalance < requiredAmount) {
+    if (currentRltBalance < requiredRLT) {
       setUiState(prev => ({ ...prev, showBuyModal: true }));
       return;
     }
@@ -189,24 +245,26 @@ const RandomLottoParticipationEngine = () => {
     const newPass = {
       id: passId,
       purchaseDate: new Date(),
-      tickets: isTelegram ? 10 : 5, // Different ticket amounts for different networks
+      tickets: 5, // 500 RLT = 5 tickets
       status: 'active',
       pattern: generatePassPattern(passId),
       roundValid: appState.currentRound,
-      tokenSpent: requiredAmount,
-      network: isTelegram ? 'TON' : 'BSC'
+      rltSpent: requiredRLT,
+      network: isTelegram ? 'TON' : 'BSC',
+      isDemo: false,
+      type: 'premium'
     };
 
     setParticipationState(prev => ({
       ...prev,
       myPasses: [newPass, ...prev.myPasses],
       myTickets: prev.myTickets + newPass.tickets,
-      poolTotal: (parseFloat(prev.poolTotal) + requiredAmount).toFixed(2),
+      poolTotal: (parseFloat(prev.poolTotal) + requiredRLT).toFixed(0),
       participationHistory: [
         {
           id: Date.now(),
           type: 'pass_purchase',
-          amount: requiredAmount,
+          amount: requiredRLT,
           tickets: newPass.tickets,
           timestamp: new Date(),
           status: 'confirmed'
@@ -226,7 +284,7 @@ const RandomLottoParticipationEngine = () => {
       showPassModal: true 
     }));
 
-  }, [balanceState.realRLT, balanceState.nativeBalance, isTelegram, appState.currentRound]);
+  }, [balanceState.rltBalance, balanceState.tonRltBalance, isTelegram, appState.currentRound]);
 
   // Copy address to clipboard
   const copyAddress = useCallback(async () => {
@@ -243,53 +301,129 @@ const RandomLottoParticipationEngine = () => {
     }
   }, [walletAddress]);
 
-  // Digital Pass Component
-  const DigitalPass = ({ pass, isModal = false }) => (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className={`relative overflow-hidden rounded-3xl border-2 border-green-400/30 ${
-        isModal ? 'w-80 h-48' : 'w-full h-32'
-      }`}
-      style={{ background: pass.pattern }}
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-green-900/80 via-green-800/60 to-green-900/80"></div>
-      
-      {/* Holographic effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-pulse"></div>
-      
-      <div className="relative z-10 p-4 h-full flex flex-col justify-between">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-white font-bold text-sm">RandomLotto {pass.network}</h3>
-            <p className="text-green-400 text-xs font-mono">{pass.id}</p>
-          </div>
-          <div className="text-right">
-            <div className="text-yellow-400 font-bold text-lg">{pass.tickets}</div>
-            <div className="text-xs text-gray-300">Tickets</div>
-          </div>
-        </div>
+  // Premium Movie-Style Ticket Component
+  const PremiumTicket = ({ pass, isModal = false, isDemoTicket = false }) => {
+    const ticketData = isDemoTicket ? pass : pass;
+    const isDemo = isDemoTicket || ticketData.isDemo;
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`relative overflow-hidden rounded-2xl ${
+          isModal ? 'w-80 h-52' : 'w-full h-36'
+        } ${isDemo ? 'opacity-75' : ''}`}
+        style={{ 
+          background: isDemo ? 
+            'linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%)' :
+            'linear-gradient(135deg, #0B3D2E 0%, #145A32 50%, #0B3D2E 100%)'
+        }}
+      >
+        {/* Movie ticket perforated edge */}
+        <div className="absolute left-0 top-0 h-full w-2 bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
+        <div className="absolute left-2 top-0 h-full border-l-2 border-dashed border-white/20"></div>
         
-        <div className="flex justify-between items-end">
-          <div>
-            <div className="text-xs text-gray-300">Round #{pass.roundValid}</div>
-            <div className="text-white text-xs">{pass.tokenSpent} {pass.network === 'TON' ? 'TON' : 'RLT'}</div>
+        {/* Ticket hole punches */}
+        <div className="absolute left-1 top-4 w-1 h-1 bg-gray-900 rounded-full"></div>
+        <div className="absolute left-1 top-8 w-1 h-1 bg-gray-900 rounded-full"></div>
+        <div className="absolute left-1 bottom-8 w-1 h-1 bg-gray-900 rounded-full"></div>
+        <div className="absolute left-1 bottom-4 w-1 h-1 bg-gray-900 rounded-full"></div>
+        
+        {/* Demo watermark overlay */}
+        {isDemo && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-6xl font-black text-gray-600/20 rotate-12 select-none">
+              DEMO
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-white text-xs">
-              {pass.purchaseDate.toLocaleDateString()}
+        )}
+        
+        {/* Holographic effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-pulse"></div>
+        
+        <div className="relative z-10 p-6 h-full flex flex-col justify-between ml-4">
+          {/* Header */}
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <FiFilm className={`w-4 h-4 ${isDemo ? 'text-gray-400' : 'text-green-400'}`} />
+                <h3 className={`font-bold text-sm ${isDemo ? 'text-gray-300' : 'text-white'}`}>
+                  RandomLotto {isDemo ? 'DEMO' : ticketData.network}
+                </h3>
+              </div>
+              <p className={`text-xs font-mono ${isDemo ? 'text-gray-500' : 'text-green-400'}`}>
+                {ticketData.id}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className={`text-2xl font-black ${isDemo ? 'text-gray-400' : 'text-yellow-400'}`}>
+                {ticketData.tickets}
+              </div>
+              <div className={`text-xs ${isDemo ? 'text-gray-500' : 'text-gray-300'}`}>
+                {ticketData.tickets === 1 ? 'TICKET' : 'TICKETS'}
+              </div>
+            </div>
+          </div>
+          
+          {/* Movie ticket details */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className={isDemo ? 'text-gray-500' : 'text-gray-300'}>ROUND</span>
+              <span className={`font-bold ${isDemo ? 'text-gray-400' : 'text-white'}`}>
+                #{ticketData.roundValid || appState.currentRound}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className={isDemo ? 'text-gray-500' : 'text-gray-300'}>SEAT</span>
+              <span className={`font-bold font-mono ${isDemo ? 'text-gray-400' : 'text-white'}`}>
+                {isDemo ? 'DEMO-A1' : `${ticketData.network}-${ticketData.tickets}`}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className={isDemo ? 'text-gray-500' : 'text-gray-300'}>DATE</span>
+              <span className={`font-bold ${isDemo ? 'text-gray-400' : 'text-white'}`}>
+                {ticketData.purchaseDate ? ticketData.purchaseDate.toLocaleDateString() : new Date().toLocaleDateString()}
+              </span>
+            </div>
+            {!isDemo && ticketData.rltSpent && (
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-300">PRICE</span>
+                <span className="font-bold text-green-400">{ticketData.rltSpent} RLT</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Status badge */}
+          <div className="flex justify-between items-end">
+            <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+              isDemo ? 'bg-gray-600/50 text-gray-300' : 'bg-green-500/20 text-green-400'
+            }`}>
+              {isDemo ? 'DEMO TICKET' : 'VALID'}
+            </div>
+            <div className="text-right">
+              <FiScissors className={`w-3 h-3 ${isDemo ? 'text-gray-500' : 'text-gray-400'} rotate-90`} />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Shimmer effect */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400/60 to-transparent animate-pulse"></div>
-    </motion.div>
-  );
+        {/* Barcode at bottom */}
+        <div className="absolute bottom-2 left-8 right-4 h-6 bg-gradient-to-r from-transparent via-white/10 to-transparent">
+          <div className="flex space-x-px h-full items-end">
+            {Array.from({ length: 20 }, (_, i) => (
+              <div 
+                key={i} 
+                className={`${isDemo ? 'bg-gray-600' : 'bg-white/30'} w-0.5`}
+                style={{ height: `${20 + (i % 4) * 10}%` }}
+              />
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
 
-  // Buy Modal
-  const BuyModal = () => (
+  // Buy RLT Modal
+  const BuyRLTModal = () => (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -309,9 +443,9 @@ const RandomLottoParticipationEngine = () => {
             <div className="w-16 h-16 glass-light rounded-3xl flex items-center justify-center mx-auto mb-4">
               <FiShoppingCart className="w-8 h-8 text-green-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Need More {isTelegram ? 'TON' : 'RLT'}?</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Need RLT Tokens?</h3>
             <p className="text-sm text-gray-300">
-              You need at least {isTelegram ? '1 TON' : '500 RLT'} to purchase a lottery pass
+              You need at least 500 RLT to purchase a lottery pass
             </p>
           </div>
 
@@ -319,18 +453,23 @@ const RandomLottoParticipationEngine = () => {
             <div className="glass-dark rounded-2xl p-4 text-center">
               <div className="text-2xl font-bold text-red-400 mb-1">
                 {isTelegram ? 
-                  parseFloat(balanceState.nativeBalance).toFixed(2) + ' TON' :
-                  parseFloat(balanceState.realRLT).toFixed(2) + ' RLT'
+                  parseFloat(balanceState.tonRltBalance).toFixed(0) + ' RLT' :
+                  parseFloat(balanceState.rltBalance).toFixed(0) + ' RLT'
                 }
               </div>
-              <div className="text-sm text-gray-400">Current Balance</div>
+              <div className="text-sm text-gray-400">Current RLT Balance</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {isTelegram ? 'TON Network' : 'BSC Network'}
+              </div>
             </div>
 
             <button
               onClick={() => {
                 if (isTelegram) {
-                  window.open('https://t.me/wallet', '_blank');
+                  // Link to TON RLT DEX (would need actual TON DEX for RLT)
+                  window.open('https://dedust.io/', '_blank');
                 } else {
+                  // Link to PancakeSwap for RLT on BSC
                   window.open('https://pancakeswap.finance/swap?inputCurrency=BNB&outputCurrency=' + RLT_CONTRACT_ADDRESS, '_blank');
                 }
               }}
@@ -338,7 +477,7 @@ const RandomLottoParticipationEngine = () => {
             >
               <div className="flex items-center justify-center space-x-2">
                 <FiExternalLink className="w-5 h-5" />
-                <span>Buy {isTelegram ? 'TON' : 'RLT'}</span>
+                <span>Buy RLT on {isTelegram ? 'DeDust' : 'PancakeSwap'}</span>
               </div>
             </button>
 
@@ -373,15 +512,15 @@ const RandomLottoParticipationEngine = () => {
         <div className="glass-content relative z-10">
           <div className="text-center mb-6">
             <FiCheck className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Pass Purchased!</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Ticket Purchased!</h3>
             <p className="text-sm text-gray-300">
-              Your digital lottery pass has been activated
+              Your premium lottery ticket has been issued
             </p>
           </div>
 
           {uiState.activePass && (
             <div className="mb-6">
-              <DigitalPass pass={uiState.activePass} isModal={true} />
+              <PremiumTicket pass={uiState.activePass} isModal={true} />
             </div>
           )}
 
@@ -409,9 +548,11 @@ const RandomLottoParticipationEngine = () => {
     </motion.div>
   );
 
-  const hasEnoughBalance = isTelegram ? 
-    parseFloat(balanceState.nativeBalance) >= 1.0 :
-    parseFloat(balanceState.realRLT) >= 500;
+  const hasEnoughRLT = isTelegram ? 
+    parseFloat(balanceState.tonRltBalance) >= 500 :
+    parseFloat(balanceState.rltBalance) >= 500;
+
+  const currentRltBalance = isTelegram ? balanceState.tonRltBalance : balanceState.rltBalance;
 
   // Not connected state
   if (!isWalletConnected) {
@@ -426,9 +567,9 @@ const RandomLottoParticipationEngine = () => {
                 <CiWallet className="w-8 h-8 text-green-400" />
                 <div className="absolute inset-0 bg-green-400/20 rounded-3xl animate-pulse"></div>
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Connect {isTelegram ? 'TON' : 'Crypto'} Wallet</h2>
+              <h2 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h2>
               <p className="text-sm text-gray-300 leading-relaxed">
-                Connect your wallet to participate in RandomLotto draws using {isTelegram ? 'TON tokens' : 'RLT tokens on Binance Smart Chain'}
+                Connect your wallet to participate in RandomLotto draws using RLT tokens
               </p>
             </div>
 
@@ -440,6 +581,9 @@ const RandomLottoParticipationEngine = () => {
                     <span>Connect TON Wallet</span>
                   </h3>
                   <TonConnectButton />
+                  <p className="text-gray-400 text-xs text-center">
+                    Connect to access RLT tokens on TON network
+                  </p>
                 </div>
               </div>
             ) : (
@@ -468,18 +612,18 @@ const RandomLottoParticipationEngine = () => {
                 <div className="flex items-center space-x-3">
                   <FiShield className="w-5 h-5 text-blue-400" />
                   <div>
-                    <h4 className="text-white font-bold text-sm">Secure Connection</h4>
-                    <p className="text-xs text-gray-400">We never store your private keys</p>
+                    <h4 className="text-white font-bold text-sm">RLT Token Required</h4>
+                    <p className="text-xs text-gray-400">Uses RLT tokens on {isTelegram ? 'TON' : 'BSC'} network</p>
                   </div>
                 </div>
               </div>
 
               <div className="glass-cool rounded-2xl p-4">
                 <div className="flex items-center space-x-3">
-                  <FiGift className="w-5 h-5 text-purple-400" />
+                  <FiFilm className="w-5 h-5 text-purple-400" />
                   <div>
-                    <h4 className="text-white font-bold text-sm">Demo Mode</h4>
-                    <p className="text-xs text-gray-400">Real wallet data, simulated transfers</p>
+                    <h4 className="text-white font-bold text-sm">Premium Tickets</h4>
+                    <p className="text-xs text-gray-400">Movie-style lottery tickets with unique IDs</p>
                   </div>
                 </div>
               </div>
@@ -505,7 +649,7 @@ const RandomLottoParticipationEngine = () => {
             <p className="text-yellow-400 font-bold">Wrong Network</p>
           </div>
           <p className="text-gray-300 text-sm mb-3">
-            Please switch to Binance Smart Chain to continue
+            Please switch to Binance Smart Chain to access RLT tokens
           </p>
           <button
             onClick={switchToBSC}
@@ -567,7 +711,7 @@ const RandomLottoParticipationEngine = () => {
             </div>
           </div>
 
-          {/* Enhanced Balance Display */}
+          {/* Enhanced Balance Display - RLT Only */}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="glass-dark rounded-2xl p-4 text-center relative overflow-hidden">
               {balanceState.isLoading && (
@@ -575,14 +719,11 @@ const RandomLottoParticipationEngine = () => {
                   <FiLoader className="w-4 h-4 animate-spin text-gray-400" />
                 </div>
               )}
-              <div className={`text-lg font-bold ${!hasEnoughBalance ? 'text-red-400' : 'text-white'}`}>
-                {isTelegram ? 
-                  parseFloat(balanceState.nativeBalance).toFixed(2) :
-                  parseFloat(balanceState.realRLT).toLocaleString()
-                }
+              <div className={`text-lg font-bold ${!hasEnoughRLT ? 'text-red-400' : 'text-white'}`}>
+                {parseFloat(currentRltBalance).toLocaleString()}
               </div>
-              <div className="text-xs text-gray-400">{isTelegram ? 'TON' : 'RLT'} Balance</div>
-              <div className="text-xs text-green-400 mt-1">{isTelegram ? 'TON Network' : 'On-Chain'}</div>
+              <div className="text-xs text-gray-400">RLT Balance</div>
+              <div className="text-xs text-green-400 mt-1">{isTelegram ? 'TON Network' : 'BSC Network'}</div>
             </div>
             
             <div className="glass-dark rounded-2xl p-4 text-center">
@@ -594,16 +735,34 @@ const RandomLottoParticipationEngine = () => {
             </div>
           </div>
 
+          {/* Network & Gas Info */}
+          <div className="glass-cool rounded-2xl p-4 mb-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-300">Network</span>
+              <span className="text-sm font-bold text-white">
+                {isTelegram ? 'TON' : 'BSC'} • RLT Token
+              </span>
+            </div>
+            {!isTelegram && (
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-300">Gas Balance</span>
+                <span className="text-sm font-bold text-blue-400">
+                  {parseFloat(balanceState.nativeBalance).toFixed(4)} BNB
+                </span>
+              </div>
+            )}
+          </div>
+
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            {!hasEnoughBalance ? (
+          <div className="grid grid-cols-2 gap-3">
+            {!hasEnoughRLT ? (
               <button
                 onClick={() => setUiState(prev => ({ ...prev, showBuyModal: true }))}
                 className="glass-button py-3 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
               >
                 <div className="flex items-center justify-center space-x-2">
                   <FiShoppingCart className="w-4 h-4" />
-                  <span>Buy {isTelegram ? 'TON' : 'RLT'}</span>
+                  <span>Buy RLT</span>
                 </div>
               </button>
             ) : (
@@ -612,8 +771,8 @@ const RandomLottoParticipationEngine = () => {
                 className="glass-button py-3 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
               >
                 <div className="flex items-center justify-center space-x-2">
-                  <FiCreditCard className="w-4 h-4" />
-                  <span>Buy Pass</span>
+                  <FiFilm className="w-4 h-4" />
+                  <span>Buy Ticket</span>
                 </div>
               </button>
             )}
@@ -636,25 +795,56 @@ const RandomLottoParticipationEngine = () => {
         </div>
       </div>
 
-      {/* My Passes Section */}
+      {/* Demo Tickets Section (for users without RLT) */}
+      {participationState.demoTickets.length > 0 && parseFloat(currentRltBalance) === 0 && (
+        <div className="glass rounded-3xl p-6">
+          <div className="glass-content">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+              <FiFilm className="w-5 h-5 text-gray-400" />
+              <span>Demo Tickets</span>
+              <span className="text-sm text-gray-400">(Preview Only)</span>
+            </h3>
+
+            <div className="space-y-3 mb-4">
+              {participationState.demoTickets.map((ticket, index) => (
+                <PremiumTicket key={ticket.id} pass={ticket} isDemoTicket={true} />
+              ))}
+            </div>
+
+            <div className="glass-dark rounded-2xl p-4 text-center">
+              <p className="text-gray-400 text-sm mb-2">
+                These are demo tickets. Purchase RLT tokens to get real lottery tickets.
+              </p>
+              <button
+                onClick={() => setUiState(prev => ({ ...prev, showBuyModal: true }))}
+                className="glass-button py-2 px-4 rounded-xl text-white font-medium text-sm"
+              >
+                Get RLT to Play
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* My Real Tickets Section */}
       {participationState.myPasses.length > 0 && (
         <div className="glass rounded-3xl p-6">
           <div className="glass-content">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-              <FiCreditCard className="w-5 h-5 text-green-400" />
-              <span>My Passes</span>
+              <FiFilm className="w-5 h-5 text-green-400" />
+              <span>My Tickets</span>
               <span className="text-sm text-gray-400">({participationState.myPasses.length})</span>
             </h3>
 
             <div className="space-y-3">
               {participationState.myPasses.slice(0, 3).map((pass, index) => (
-                <DigitalPass key={pass.id} pass={pass} />
+                <PremiumTicket key={pass.id} pass={pass} />
               ))}
             </div>
 
             {participationState.myPasses.length > 3 && (
               <button className="w-full mt-3 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                View All Passes ({participationState.myPasses.length})
+                View All Tickets ({participationState.myPasses.length})
               </button>
             )}
           </div>
@@ -673,7 +863,7 @@ const RandomLottoParticipationEngine = () => {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-300">Prize Pool</span>
               <span className="text-lg font-bold text-white">
-                {parseFloat(participationState.poolTotal).toLocaleString()} {isTelegram ? 'TON' : 'RLT'}
+                {parseFloat(participationState.poolTotal).toLocaleString()} RLT
               </span>
             </div>
 
@@ -712,33 +902,6 @@ const RandomLottoParticipationEngine = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      {participationState.participationHistory.length > 0 && (
-        <div className="glass-dark rounded-2xl p-4">
-          <h4 className="text-white font-bold mb-3 flex items-center space-x-2">
-            <FiTrendingUp className="w-4 h-4 text-blue-400" />
-            <span>Recent Activity</span>
-          </h4>
-          <div className="space-y-2">
-            {participationState.participationHistory.slice(0, 3).map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-2 glass-cool rounded-xl">
-                <div>
-                  <div className="text-sm text-white font-medium">
-                    Participated: {activity.amount} {isTelegram ? 'TON' : 'RLT'}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {activity.tickets} tickets • {activity.timestamp.toLocaleTimeString()}
-                  </div>
-                </div>
-                <div className="text-xs text-green-400 font-medium">
-                  {activity.status}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Error Display */}
       <AnimatePresence>
         {uiState.error && (
@@ -764,38 +927,16 @@ const RandomLottoParticipationEngine = () => {
         )}
       </AnimatePresence>
 
-      {/* Winner Announcement */}
-      {appState.lastDrawWinner && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-warm border-2 border-yellow-400/30 rounded-2xl p-4"
-        >
-          <div className="flex items-center space-x-2 mb-2">
-            <FiGift className="w-5 h-5 text-yellow-400" />
-            <p className="text-yellow-400 font-bold">Draw Complete!</p>
-          </div>
-          <p className="text-white text-sm">
-            Winner: {appState.lastDrawWinner.slice(0, 6)}...{appState.lastDrawWinner.slice(-4)}
-            {appState.lastDrawWinner.toLowerCase() === walletAddress?.toLowerCase() && (
-              <span className="text-green-400 font-bold ml-2">🎉 That's you!</span>
-            )}
-          </p>
-        </motion.div>
-      )}
-
       {/* Info Card */}
       <div className="glass-cool rounded-2xl p-4">
         <div className="glass-content">
           <div className="flex items-start space-x-3">
             <FiShield className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-white font-bold mb-1">{isTelegram ? 'TON' : 'Demo'} Mode Active</h4>
+              <h4 className="text-white font-bold mb-1">RLT Token Lottery</h4>
               <p className="text-xs text-gray-400 leading-relaxed">
-                {isTelegram ? 
-                  'Using real TON wallet connection. Purchase passes with actual TON tokens for lottery participation.' :
-                  'This demo uses real RLT balance data from BSC but simulates transfers locally. No actual tokens are moved on the blockchain.'
-                }
+                Purchase premium movie-style tickets with RLT tokens. 500 RLT = 5 tickets. 
+                {parseFloat(currentRltBalance) === 0 && ' Demo tickets shown - get RLT to participate!'}
               </p>
             </div>
           </div>
@@ -805,7 +946,7 @@ const RandomLottoParticipationEngine = () => {
       {/* Modals */}
       <AnimatePresence>
         {uiState.showPassModal && <PassModal />}
-        {uiState.showBuyModal && <BuyModal />}
+        {uiState.showBuyModal && <BuyRLTModal />}
       </AnimatePresence>
     </motion.div>
   );
