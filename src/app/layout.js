@@ -1,3 +1,4 @@
+import Web3Provider from "@/components/Web3Provider";
 import "./globals.css";
 import Script from "next/script";
 
@@ -73,7 +74,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="antialiased min-h-screen bg-[#0D0D0F] flex flex-col font-[Space_Grotesk]">
+        <Web3Provider>
         {children}
+        </Web3Provider>
       </body>
     </html>
   );

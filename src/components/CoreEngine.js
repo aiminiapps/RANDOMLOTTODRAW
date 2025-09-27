@@ -1,764 +1,726 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { ethers } from 'ethers';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FiCheck, 
-  FiLoader, 
-  FiAlertTriangle,
-  FiTarget,
-  FiZap,
-  FiShield,
-  FiTrendingUp,
-  FiDollarSign,
-  FiGift,
-  FiUsers
-} from 'react-icons/fi';
-import { CiWallet } from "react-icons/ci";
+  FaFire, FaBolt, FaEye, FaShieldAlt, FaRocket, 
+  FaChartLine, FaCoins, FaSync, FaStar, FaWallet,
+  FaPaperPlane, FaSpinner
+} from 'react-icons/fa';
+import { 
+  GiNinjaStar, GiNinjaMask, GiShurikens, 
+  GiTargetPrize, GiKatana, GiNinjaHead 
+} from 'react-icons/gi';
+import { useAccount, useBalance, useDisconnect } from 'wagmi';
+import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { formatEther } from 'viem';
+import Image from 'next/image';
+import { IoMdTrendingUp, IoMdTrendingDown } from "react-icons/io";
 
-// BSC Network Configuration
-const BSC_NETWORK = {
-  chainId: '0x38', // 56 in decimal
-  chainName: 'BNB Smart Chain',
-  nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-  rpcUrls: ['https://bsc-dataseed1.binance.org/'],
-  blockExplorerUrls: ['https://bscscan.com/']
-};
+// Enhanced wallet connection with multi-wallet support
+function NinjaWalletConnect() {
+  const { address, isConnected, connector } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { open } = useWeb3Modal();
+  const tonWallet = useTonWallet();
 
-// RLT Token Contract Configuration
-const RLT_CONTRACT_ADDRESS = '0x27FDc94c04Ea70D3B9FEFd1fB8f5508f94f6a815';
-const RLT_ABI = [
-  'function balanceOf(address account) external view returns (uint256)',
-  'function decimals() view returns (uint8)',
-  'function symbol() view returns (string)',
-  'function name() view returns (string)',
-  'function totalSupply() view returns (uint256)'
-];
+  // Detect Telegram environment
+  const isTelegram = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
 
-const RandomLottoParticipationEngine = () => {
-  // Wallet State
-  const [walletState, setWalletState] = useState({
-    isConnected: false,
-    address: null,
-    provider: null,
-    chainId: null,
-    isLoading: false,
-    error: null
-  });
-
-  // Balance State (Real + Simulated)
-  const [balanceState, setBalanceState] = useState({
-    realRLT: '0',
-    simulatedRLT: '0',
-    bnbBalance: '0',
-    isLoading: false
-  });
-
-  // Participation State
-  const [participationState, setParticipationState] = useState({
-    amount: '',
-    isParticipating: false,
-    poolTotal: '12450', // Simulated pool total
-    poolThreshold: '50000',
-    myTickets: 0,
-    participationHistory: []
-  });
-
-  // App State (Simulated data)
-  const [appState, setAppState] = useState({
-    simulatedBalances: {}, // { [address]: balance }
-    totalParticipants: 2847,
-    currentRound: 42,
-    lastDrawWinner: null
-  });
-
-  const [telegramUser, setTelegramUser] = useState(null);
-
-  // Get Telegram user data
-  useEffect(() => {
-    try {
-      const telegram = window?.Telegram?.WebApp;
-      if (telegram?.initDataUnsafe?.user) {
-        setTelegramUser({
-          firstName: telegram.initDataUnsafe.user.first_name,
-          username: telegram.initDataUnsafe.user.username,
-          id: telegram.initDataUnsafe.user.id
-        });
-      }
-    } catch (error) {
-      console.log('Telegram WebApp not available');
-    }
-  }, []);
-
-  // Switch to BSC Network
-  const switchToBSC = useCallback(async () => {
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: BSC_NETWORK.chainId }],
-      });
-    } catch (switchError) {
-      // This error code indicates that the chain has not been added to MetaMask
-      if (switchError.code === 4902) {
-        try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [BSC_NETWORK],
-          });
-        } catch (addError) {
-          throw new Error('Failed to add BSC network to wallet');
-        }
-      } else {
-        throw switchError;
-      }
-    }
-  }, []);
-
-  // Connect Wallet
-  const connectWallet = useCallback(async (method = 'metamask') => {
-    setWalletState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      if (!window.ethereum) {
-        throw new Error('Please install MetaMask or another Web3 wallet');
-      }
-
-      // Request account access
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts'
-      });
-
-      if (!accounts || accounts.length === 0) {
-        throw new Error('No accounts found');
-      }
-
-      const address = accounts[0];
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      
-      // Get current chain
-      const network = await provider.getNetwork();
-      const chainId = Number(network.chainId);
-
-      // Switch to BSC if not already on it
-      if (chainId !== 56) {
-        await switchToBSC();
-        // Refresh provider after network switch
-        const newProvider = new ethers.BrowserProvider(window.ethereum);
-        const newNetwork = await newProvider.getNetwork();
-        
-        setWalletState({
-          isConnected: true,
-          address,
-          provider: newProvider,
-          chainId: Number(newNetwork.chainId),
-          isLoading: false,
-          error: null
-        });
-      } else {
-        setWalletState({
-          isConnected: true,
-          address,
-          provider,
-          chainId,
-          isLoading: false,
-          error: null
-        });
-      }
-
-      // Load balances
-      await loadBalances(address, provider);
-
-      // Initialize simulated balance if not exists
-      setAppState(prev => ({
-        ...prev,
-        simulatedBalances: {
-          ...prev.simulatedBalances,
-          [address.toLowerCase()]: prev.simulatedBalances[address.toLowerCase()] || 0
-        }
-      }));
-
-    } catch (error) {
-      console.error('Wallet connection error:', error);
-      setWalletState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error.message || 'Failed to connect wallet'
-      }));
-    }
-  }, [switchToBSC]);
-
-  // Load Real Balances from Blockchain
-  const loadBalances = useCallback(async (address, provider) => {
-    setBalanceState(prev => ({ ...prev, isLoading: true }));
-
-    try {
-      // Get BNB balance
-      const bnbBalance = await provider.getBalance(address);
-      const bnbFormatted = ethers.formatEther(bnbBalance);
-
-      // Get RLT token balance
-      const rltContract = new ethers.Contract(RLT_CONTRACT_ADDRESS, RLT_ABI, provider);
-      const rltBalance = await rltContract.balanceOf(address);
-      const decimals = await rltContract.decimals();
-      const rltFormatted = ethers.formatUnits(rltBalance, decimals);
-
-      setBalanceState({
-        realRLT: rltFormatted,
-        simulatedRLT: appState.simulatedBalances[address.toLowerCase()] || '0',
-        bnbBalance: bnbFormatted,
-        isLoading: false
-      });
-
-    } catch (error) {
-      console.error('Failed to load balances:', error);
-      setBalanceState(prev => ({ ...prev, isLoading: false }));
-    }
-  }, [appState.simulatedBalances]);
-
-  // Simulate RLT Transfer for Participation
-  const simulateParticipation = useCallback(async () => {
-    if (!participationState.amount || !walletState.address) return;
-
-    const amount = parseFloat(participationState.amount);
-    const userAddress = walletState.address.toLowerCase();
-    const currentSimulatedBalance = appState.simulatedBalances[userAddress] || 0;
-
-    if (amount <= 0 || amount > 10000) {
-      setWalletState(prev => ({ 
-        ...prev, 
-        error: 'Participation amount must be between 1 and 10,000 RLT' 
-      }));
-      return;
-    }
-
-    // Check if user has enough simulated balance (or use real balance as reference)
-    const availableBalance = Math.max(
-      parseFloat(balanceState.realRLT), 
-      currentSimulatedBalance
-    );
-
-    if (amount > availableBalance) {
-      setWalletState(prev => ({ 
-        ...prev, 
-        error: 'Insufficient RLT balance for participation' 
-      }));
-      return;
-    }
-
-    setParticipationState(prev => ({ ...prev, isParticipating: true }));
-
-    try {
-      // Simulate transfer delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Update simulated balances
-      const newSimulatedBalance = Math.max(0, currentSimulatedBalance - amount);
-      
-      setAppState(prev => ({
-        ...prev,
-        simulatedBalances: {
-          ...prev.simulatedBalances,
-          [userAddress]: newSimulatedBalance
-        },
-        totalParticipants: prev.totalParticipants + 1
-      }));
-
-      // Update balance state
-      setBalanceState(prev => ({
-        ...prev,
-        simulatedRLT: newSimulatedBalance.toString()
-      }));
-
-      // Update participation state
-      const tickets = Math.floor(amount / 100); // 100 RLT = 1 ticket
-      setParticipationState(prev => ({
-        ...prev,
-        amount: '',
-        myTickets: prev.myTickets + tickets,
-        poolTotal: (parseFloat(prev.poolTotal) + amount).toString(),
-        participationHistory: [
-          {
-            id: Date.now(),
-            amount,
-            tickets,
-            timestamp: new Date(),
-            status: 'confirmed'
-          },
-          ...prev.participationHistory
-        ],
-        isParticipating: false
-      }));
-
-      // Check if threshold reached for simulated draw
-      const newPoolTotal = parseFloat(participationState.poolTotal) + amount;
-      if (newPoolTotal >= parseFloat(participationState.poolThreshold)) {
-        setTimeout(() => {
-          simulateDraw();
-        }, 3000);
-      }
-
-      // Clear any errors
-      setWalletState(prev => ({ ...prev, error: null }));
-
-    } catch (error) {
-      setWalletState(prev => ({ 
-        ...prev, 
-        error: 'Participation simulation failed' 
-      }));
-      setParticipationState(prev => ({ ...prev, isParticipating: false }));
-    }
-  }, [participationState.amount, walletState.address, appState.simulatedBalances, balanceState.realRLT, participationState.poolTotal, participationState.poolThreshold]);
-
-  // Simulate Draw when threshold reached
-  const simulateDraw = useCallback(() => {
-    const winners = [
-      walletState.address,
-      '0x742d35Cc6334C45532B85C6b2d7C6F3f9C5a9A8B',
-      '0x8Ba1f109551bD432803012645Hac136c59e693B9'
-    ];
-    
-    const randomWinner = winners[Math.floor(Math.random() * winners.length)];
-    const prizeAmount = parseFloat(participationState.poolTotal) * 0.6; // 60% of pool
-
-    setAppState(prev => ({
-      ...prev,
-      lastDrawWinner: randomWinner,
-      currentRound: prev.currentRound + 1
-    }));
-
-    // If current user won, add to their simulated balance
-    if (randomWinner.toLowerCase() === walletState.address?.toLowerCase()) {
-      const userAddress = walletState.address.toLowerCase();
-      setAppState(prev => ({
-        ...prev,
-        simulatedBalances: {
-          ...prev.simulatedBalances,
-          [userAddress]: (prev.simulatedBalances[userAddress] || 0) + prizeAmount
-        }
-      }));
-      
-      setBalanceState(prev => ({
-        ...prev,
-        simulatedRLT: ((prev.simulatedRLT || 0) + prizeAmount).toString()
-      }));
-    }
-
-    // Reset pool
-    setParticipationState(prev => ({
-      ...prev,
-      poolTotal: '0',
-      myTickets: 0
-    }));
-
-  }, [walletState.address, participationState.poolTotal]);
-
-  // Disconnect wallet
-  const disconnectWallet = useCallback(() => {
-    setWalletState({
-      isConnected: false,
-      address: null,
-      provider: null,
-      chainId: null,
-      isLoading: false,
-      error: null
-    });
-    
-    setBalanceState({
-      realRLT: '0',
-      simulatedRLT: '0',
-      bnbBalance: '0',
-      isLoading: false
-    });
-  }, []);
-
-  // Handle account/network changes
-  useEffect(() => {
-    if (window.ethereum) {
-      const handleAccountsChanged = (accounts) => {
-        if (accounts.length === 0) {
-          disconnectWallet();
-        } else if (accounts[0] !== walletState.address) {
-          connectWallet();
-        }
-      };
-
-      const handleChainChanged = () => {
-        window.location.reload();
-      };
-
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', handleChainChanged);
-
-      return () => {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        window.ethereum.removeListener('chainChanged', handleChainChanged);
-      };
-    }
-  }, [walletState.address, connectWallet, disconnectWallet]);
-
-  // Auto-refresh balances
-  useEffect(() => {
-    if (walletState.isConnected && walletState.address && walletState.provider) {
-      const interval = setInterval(() => {
-        loadBalances(walletState.address, walletState.provider);
-      }, 30000); // Refresh every 30 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [walletState.isConnected, walletState.address, walletState.provider, loadBalances]);
-
-  const canParticipate = walletState.isConnected && 
-                        participationState.amount && 
-                        parseFloat(participationState.amount) > 0 &&
-                        parseFloat(participationState.amount) <= Math.max(
-                          parseFloat(balanceState.realRLT),
-                          appState.simulatedBalances[walletState.address?.toLowerCase()] || 0
-                        );
-
-  if (!walletState.isConnected) {
+  if (isTelegram) {
     return (
-      <div className="w-full max-w-md mx-auto space-y-4">
-        <div className="glass-warm rounded-3xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-400/10 to-transparent rounded-full blur-2xl"></div>
-          
-          <div className="glass-content relative z-10">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 glass-light rounded-3xl flex items-center justify-center mx-auto mb-4 relative">
-                <CiWallet className="w-8 h-8 text-green-400" />
-                <div className="absolute inset-0 bg-green-400/20 rounded-3xl animate-pulse"></div>
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Connect to BSC Network</h2>
-              <p className="text-sm text-gray-300 leading-relaxed">
-                Connect your wallet to participate in RandomLotto draws using RLT tokens on Binance Smart Chain
+      <div className="glass glass-particles p-4 rounded-xl mb-6">
+        <div className="flex flex-col items-center space-y-3">
+          <h3 className="text-white font-bold tektur flex items-center space-x-2">
+            <GiNinjaMask />
+            <span>Connect TON Wallet</span>
+          </h3>
+          <TonConnectButton className="!bg-gradient-to-r !from-orange-600 !to-red-600 !px-6 !py-3 !rounded-xl !font-bold" />
+          {tonWallet && (
+            <div className="text-center">
+              <p className="text-orange-400 text-sm mb-2">
+                🥷 Connected: {tonWallet.account.address.slice(0, 6)}...{tonWallet.account.address.slice(-4)}
               </p>
+              <p className="text-green-400 text-xs">TON Network</p>
             </div>
-
-            <button
-              onClick={() => connectWallet('metamask')}
-              disabled={walletState.isLoading}
-              className="glass-button w-full py-4 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                {walletState.isLoading ? (
-                  <FiLoader className="w-5 h-5 animate-spin" />
-                ) : (
-                  <CiWallet className="w-5 h-5" />
-                )}
-                <span>{walletState.isLoading ? 'Connecting...' : 'Connect Wallet'}</span>
-              </div>
-            </button>
-
-            {walletState.error && (
-              <div className="mt-4 p-4 glass-dark border-2 border-red-400/30 rounded-2xl">
-                <div className="flex items-center space-x-2">
-                  <FiAlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <p className="text-red-400 text-sm">{walletState.error}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-6 space-y-3">
-              <div className="glass-cool rounded-2xl p-4">
-                <div className="flex items-center space-x-3">
-                  <FiShield className="w-5 h-5 text-blue-400" />
-                  <div>
-                    <h4 className="text-white font-bold text-sm">Secure Connection</h4>
-                    <p className="text-xs text-gray-400">We never store your private keys</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-cool rounded-2xl p-4">
-                <div className="flex items-center space-x-3">
-                  <FiGift className="w-5 h-5 text-purple-400" />
-                  <div>
-                    <h4 className="text-white font-bold text-sm">Demo Mode</h4>
-                    <p className="text-xs text-gray-400">Simulated transfers, real blockchain data</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     );
   }
 
-  const isWrongNetwork = walletState.chainId !== 56;
-
   return (
-    <motion.div 
-      className="w-full max-w-md mx-auto space-y-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Wrong Network Warning */}
-      {isWrongNetwork && (
-        <div className="glass-dark border-2 border-yellow-400/30 rounded-2xl p-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <FiAlertTriangle className="w-5 h-5 text-yellow-400" />
-            <p className="text-yellow-400 font-bold">Wrong Network</p>
-          </div>
-          <p className="text-gray-300 text-sm mb-3">
-            Please switch to Binance Smart Chain to continue
-          </p>
-          <button
-            onClick={switchToBSC}
-            className="glass-button w-full py-2 rounded-xl text-white font-medium"
-          >
-            Switch to BSC
-          </button>
-        </div>
-      )}
-
-      {/* Wallet Info */}
-      <div className="glass-light rounded-3xl p-6">
-        <div className="glass-content">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 glass-warm rounded-2xl flex items-center justify-center">
-                <FiCheck className="w-5 h-5 text-green-400" />
-              </div>
-              <div>
-                <p className="text-white font-bold">
-                  {telegramUser?.firstName || 'Player'}
-                </p>
-                <p className="text-sm text-gray-400 font-mono">
-                  {walletState.address?.slice(0, 6)}...{walletState.address?.slice(-4)}
-                </p>
-              </div>
+    <div className="glass glass-particles p-4 rounded-xl mb-6">
+      <div className="text-center">
+        {isConnected ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-center space-x-2 text-orange-400">
+              <GiNinjaStar />
+              <span className="font-bold">Wallet Connected</span>
+            </div>
+            <div className="bg-black/20 p-3 rounded-lg">
+              <p className="text-white text-sm">🥷 {address?.slice(0, 6)}...{address?.slice(-4)}</p>
+              <p className="text-green-400 text-xs mt-1">
+                Via {connector?.name || 'Unknown'}
+              </p>
             </div>
             <button
-              onClick={disconnectWallet}
-              className="text-xs text-gray-400 hover:text-white transition-colors"
+              onClick={() => disconnect()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
             >
               Disconnect
             </button>
           </div>
+        ) : (
+          <div className="space-y-4">
+            <h3 className="text-white font-bold tektur mb-4">Connect Your Wallet</h3>
+            <button
+              onClick={() => open()}
+              className="glass-button w-full py-3 px-6 rounded-xl font-bold flex items-center justify-center space-x-2"
+            >
+              <FaWallet />
+              <span>Connect Wallet</span>
+            </button>
+            <p className="text-gray-400 text-xs">
+              Supports MetaMask, Trust Wallet, WalletConnect & 400+ wallets
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-          {/* Balances Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="glass-dark rounded-2xl p-4 text-center relative overflow-hidden">
-              {balanceState.isLoading && (
-                <div className="absolute inset-0 bg-gray-800/50 flex items-center justify-center rounded-2xl">
-                  <FiLoader className="w-4 h-4 animate-spin text-gray-400" />
-                </div>
-              )}
-              <div className="text-lg font-bold text-white">
-                {parseFloat(balanceState.realRLT).toFixed(2)}
+// Enhanced User Assets Display Component
+function UserAssetsDisplay({ balance, address }) {
+  const { isConnected } = useAccount(); // ✅ FIXED: Added isConnected from useAccount hook
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalValue, setTotalValue] = useState(0);
+
+  // Mock price data (in production, fetch from real API)
+  const mockPrices = {
+    ETH: 3247.50,
+    BTC: 110799.00,
+    USDC: 1.00,
+    USDT: 1.00,
+    BNB: 645.30,
+    ADA: 1.25,
+    DOT: 18.45,
+    MATIC: 2.15
+  };
+
+  // Generate enhanced asset data
+  const generateUserAssets = useCallback(() => {
+    if (!balance || !address) return [];
+
+    const ethValue = parseFloat(formatEther(balance.value));
+    
+    // Create diverse portfolio based on ETH balance
+    const portfolioAssets = [
+      {
+        symbol: 'ETH',
+        name: 'Ethereum',
+        balance: ethValue,
+        price: mockPrices.ETH,
+        value: ethValue * mockPrices.ETH,
+        icon: '🔹',
+        change24h: '+2.14%',
+        changeValue: 2.14,
+        network: 'Ethereum'
+      }
+    ];
+
+    // Add additional mock assets if user has ETH
+    if (ethValue > 0) {
+      const additionalAssets = [
+        {
+          symbol: 'USDC',
+          name: 'USD Coin',
+          balance: ethValue * 800,
+          price: mockPrices.USDC,
+          value: ethValue * 800 * mockPrices.USDC,
+          icon: '💵',
+          change24h: '+0.01%',
+          changeValue: 0.01,
+          network: 'Ethereum'
+        },
+        {
+          symbol: 'BTC',
+          name: 'Bitcoin',
+          balance: ethValue * 0.025,
+          price: mockPrices.BTC,
+          value: ethValue * 0.025 * mockPrices.BTC,
+          icon: '₿',
+          change24h: '-1.39%',
+          changeValue: -1.39,
+          network: 'Bitcoin'
+        }
+      ];
+
+      portfolioAssets.push(...additionalAssets.filter(asset => asset.balance > 0.001));
+    }
+
+    return portfolioAssets;
+  }, [balance, address]);
+
+  useEffect(() => {
+    if (balance && address && isConnected) {
+      setLoading(true);
+      setTimeout(() => {
+        const generatedAssets = generateUserAssets();
+        setAssets(generatedAssets);
+        setTotalValue(generatedAssets.reduce((sum, asset) => sum + asset.value, 0));
+        setLoading(false);
+      }, 1000);
+    } else {
+      setAssets([]);
+      setTotalValue(0);
+    }
+  }, [balance, address, isConnected, generateUserAssets]);
+
+  // ✅ FIXED: Show wallet not connected message
+  if (!address || !isConnected) {
+    return (
+      <motion.div 
+        className="glass glass-particles p-5 rounded-2xl mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white tektur flex items-center space-x-2">
+            <FaCoins className="text-orange-400" />
+            <span>Ninja Portfolio</span>
+          </h3>
+        </div>
+        
+        <div className="text-center py-12">
+          <FaWallet className="text-gray-500 text-4xl mx-auto mb-4" />
+          <p className="text-gray-400 text-lg font-medium mb-2">Wallet Not Connected</p>
+          <p className="text-gray-500 text-sm">
+            Connect your wallet to view your ninja portfolio
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <motion.div 
+        className="glass glass-particles p-5 rounded-2xl mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="text-center py-8">
+          <FaSpinner className="animate-spin text-orange-400 text-2xl mx-auto mb-3" />
+          <p className="text-white">🥷 Scanning your ninja vault...</p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div 
+      className="glass glass-particles p-5 rounded-2xl mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      {/* Portfolio Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold text-white tektur flex items-center space-x-2">
+          <FaCoins className="text-orange-400" />
+          <span>Ninja Portfolio</span>
+        </h3>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-orange-400">
+            ${totalValue.toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-400">Total Value</div>
+        </div>
+      </div>
+
+      {/* Assets List */}
+      <div className="space-y-3">
+        {assets.map((asset, index) => (
+          <motion.div
+            key={asset.symbol}
+            className="flex items-center justify-between bg-black/20 p-4 rounded-xl border border-gray-700/30 hover:border-orange-500/30 transition-colors"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white text-xl">
+                {asset.icon}
               </div>
-              <div className="text-xs text-gray-400">Real RLT Balance</div>
-              <div className="text-xs text-green-400 mt-1">On-Chain</div>
+              <div>
+                <div className="text-white font-bold text-lg">{asset.name}</div>
+                <div className="text-gray-400 text-sm">
+                  {asset.balance.toFixed(6)} {asset.symbol}
+                </div>
+                <div className="text-xs text-gray-500">{asset.network}</div>
+              </div>
             </div>
             
-            <div className="glass-dark rounded-2xl p-4 text-center">
-              <div className="text-lg font-bold text-green-400">
-                {parseFloat(balanceState.simulatedRLT || '0').toFixed(2)}
+            <div className="text-right">
+              <div className="text-white font-bold text-lg">
+                ${asset.value.toFixed(2)}
               </div>
-              <div className="text-xs text-gray-400">Available RLT</div>
-              <div className="text-xs text-blue-400 mt-1">Simulated</div>
-            </div>
-          </div>
-
-          {/* BNB Balance */}
-          <div className="glass-cool rounded-2xl p-3 text-center">
-            <div className="text-sm font-bold text-white">
-              {parseFloat(balanceState.bnbBalance).toFixed(4)} BNB
-            </div>
-            <div className="text-xs text-gray-400">Network Balance</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Participation Form */}
-      <div className="glass rounded-3xl p-6 relative overflow-hidden">
-        <div className="glass-content relative z-10">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-            <FiTarget className="w-5 h-5 text-green-400" />
-            <span>Join Lottery Draw</span>
-          </h3>
-
-          <div className="space-y-4">
-            {/* Amount Input */}
-            <div>
-              <label className="block text-sm text-gray-300 mb-2">
-                Participation Amount (100 RLT = 1 Ticket)
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min="100"
-                  max="10000"
-                  step="100"
-                  value={participationState.amount}
-                  onChange={(e) => setParticipationState(prev => ({ 
-                    ...prev, 
-                    amount: e.target.value 
-                  }))}
-                  className="w-full glass-dark rounded-2xl p-4 text-white placeholder-gray-400 border-2 border-gray-600/30 focus:border-green-400/50 transition-colors"
-                  placeholder="Enter amount (100-10,000 RLT)"
-                />
-                <div className="absolute right-4 top-4 text-sm text-gray-400">
-                  RLT
-                </div>
+              <div className="text-sm text-gray-400">
+                ${asset.price.toLocaleString()}
               </div>
-              {participationState.amount && (
-                <p className="text-xs text-gray-400 mt-2">
-                  = {Math.floor(parseFloat(participationState.amount) / 100)} tickets
-                </p>
-              )}
-            </div>
-
-            {/* Pool Status */}
-            <div className="glass-cool rounded-2xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-300">Current Pool</span>
-                <span className="text-sm font-bold text-white">
-                  {parseFloat(participationState.poolTotal).toLocaleString()} / {parseFloat(participationState.poolThreshold).toLocaleString()} RLT
-                </span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                <div 
-                  className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-500"
-                  style={{ 
-                    width: `${Math.min((participationState.poolTotal / participationState.poolThreshold) * 100, 100)}%` 
-                  }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>
-                  <FiUsers className="w-3 h-3 inline mr-1" />
-                  {appState.totalParticipants.toLocaleString()} players
-                </span>
-                <span>Round #{appState.currentRound}</span>
+              <div className={`text-sm flex items-center space-x-1 ${
+                asset.changeValue >= 0 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {asset.changeValue >= 0 ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
+                <span>{asset.change24h}</span>
               </div>
             </div>
-
-            {/* Participate Button */}
-            <button
-              onClick={simulateParticipation}
-              disabled={!canParticipate || participationState.isParticipating || isWrongNetwork}
-              className="glass-button w-full py-4 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {participationState.isParticipating ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <FiLoader className="w-5 h-5 animate-spin" />
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center space-x-2">
-                  <FiZap className="w-5 h-5" />
-                  <span>
-                    Participate ({participationState.amount || '0'} RLT)
-                  </span>
-                </div>
-              )}
-            </button>
-
-            {/* My Tickets */}
-            {participationState.myTickets > 0 && (
-              <div className="glass-dark rounded-2xl p-4">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-green-400">
-                    {participationState.myTickets}
-                  </div>
-                  <div className="text-sm text-gray-400">Your Active Tickets</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      {participationState.participationHistory.length > 0 && (
-        <div className="glass-dark rounded-2xl p-4">
-          <h4 className="text-white font-bold mb-3 flex items-center space-x-2">
-            <FiTrendingUp className="w-4 h-4 text-blue-400" />
-            <span>Recent Activity</span>
-          </h4>
-          <div className="space-y-2">
-            {participationState.participationHistory.slice(0, 3).map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between p-2 glass-cool rounded-xl">
-                <div>
-                  <div className="text-sm text-white font-medium">
-                    Participated: {activity.amount} RLT
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {activity.tickets} tickets • {activity.timestamp.toLocaleTimeString()}
-                  </div>
-                </div>
-                <div className="text-xs text-green-400 font-medium">
-                  {activity.status}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Error Display */}
-      <AnimatePresence>
-        {walletState.error && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="glass-dark border-2 border-red-400/30 rounded-2xl p-4"
-          >
-            <div className="flex items-center space-x-2">
-              <FiAlertTriangle className="w-5 h-5 text-red-400" />
-              <p className="text-red-400 text-sm">{walletState.error}</p>
-            </div>
-            <button
-              onClick={() => setWalletState(prev => ({ ...prev, error: null }))}
-              className="text-xs text-gray-400 hover:text-white transition-colors mt-2"
-            >
-              Dismiss
-            </button>
           </motion.div>
-        )}
-      </AnimatePresence>
+        ))}
+      </div>
 
-      {/* Winner Announcement */}
-      {appState.lastDrawWinner && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-warm border-2 border-yellow-400/30 rounded-2xl p-4"
-        >
-          <div className="flex items-center space-x-2 mb-2">
-            <FiGift className="w-5 h-5 text-yellow-400" />
-            <p className="text-yellow-400 font-bold">Draw Complete!</p>
-          </div>
-          <p className="text-white text-sm">
-            Winner: {appState.lastDrawWinner.slice(0, 6)}...{appState.lastDrawWinner.slice(-4)}
-            {appState.lastDrawWinner.toLowerCase() === walletState.address?.toLowerCase() && (
-              <span className="text-green-400 font-bold ml-2">🎉 That's you!</span>
-            )}
-          </p>
-        </motion.div>
-      )}
-
-      {/* Info Card */}
-      <div className="glass-cool rounded-2xl p-4">
-        <div className="glass-content">
-          <div className="flex items-start space-x-3">
-            <FiShield className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+      {/* Portfolio Stats */}
+      {assets.length > 0 && (
+        <div className="mt-6 p-4 bg-black/20 rounded-xl">
+          <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <h4 className="text-white font-bold mb-1">Demo Mode Active</h4>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                This demo uses real RLT balance data from BSC but simulates transfers locally. 
-                No actual tokens are moved on the blockchain. Perfect for testing the lottery experience!
+              <div className="text-orange-400 font-bold text-lg">{assets.length}</div>
+              <div className="text-xs text-gray-400">Assets</div>
+            </div>
+            <div>
+              <div className="text-green-400 font-bold text-lg">
+                {assets.filter(a => a.changeValue >= 0).length}
+              </div>
+              <div className="text-xs text-gray-400">Gaining</div>
+            </div>
+            <div>
+              <div className="text-blue-400 font-bold text-lg">
+                {Math.max(...assets.map(a => Math.abs(a.changeValue))).toFixed(2)}%
+              </div>
+              <div className="text-xs text-gray-400">Best Move</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// Enhanced AI Portfolio Chat Bot
+function NinjaPortfolioChat({ userAssets, selectedCoin, isConnected }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Dynamic greeting based on wallet connection and assets
+    const getGreetingMessage = () => {
+      if (!isConnected) {
+        return `🥷 Greetings, aspiring ninja! Connect your wallet to unlock personalized portfolio strategies and tactical advice!`;
+      }
+
+      if (userAssets?.length > 0) {
+        const totalValue = userAssets.reduce((sum, asset) => sum + asset.value, 0);
+        const topAsset = userAssets.reduce((max, asset) => asset.value > max.value ? asset : max);
+        
+        return `🥷 Welcome back, ninja warrior! I see you hold $${totalValue.toFixed(2)} across ${userAssets.length} assets, with ${topAsset.symbol} as your strongest position. How can I help optimize your portfolio strategy today?`;
+      }
+
+      return `🥷 Wallet connected! I'm ready to help you build a legendary portfolio. What's your investment strategy, fellow ninja?`;
+    };
+
+    setMessages([{
+      id: 1,
+      type: 'ai',
+      content: getGreetingMessage(),
+      timestamp: new Date()
+    }]);
+  }, [selectedCoin, userAssets, isConnected]);
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: input,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setLoading(true);
+    setInput('');
+
+    try {
+      // Enhanced context with detailed portfolio info
+      const portfolioContext = userAssets?.length > 0 
+        ? userAssets.map(asset => 
+            `${asset.symbol}: ${asset.balance.toFixed(4)} ($${asset.value.toFixed(2)}) - ${asset.change24h}`
+          ).join(', ')
+        : 'No assets detected - wallet not connected or empty';
+
+      const totalValue = userAssets?.reduce((sum, asset) => sum + asset.value, 0) || 0;
+      const bestPerformer = userAssets?.reduce((best, asset) => 
+        asset.changeValue > (best?.changeValue || -Infinity) ? asset : best
+      );
+
+      const response = await fetch('/api/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: `You are a ninja portfolio advisor specializing in ${selectedCoin?.name || 'crypto'}. 
+              
+              User's portfolio: ${portfolioContext}
+              Total portfolio value: $${totalValue.toFixed(2)}
+              Best performing asset: ${bestPerformer?.symbol || 'None'} (${bestPerformer?.change24h || 'N/A'})
+              Wallet status: ${isConnected ? 'Connected' : 'Not connected'}
+              
+              Provide tactical advice in ninja-themed language with emojis. Focus on:
+              - Portfolio diversification and risk management
+              - Strategic entry/exit points
+              - Asset allocation optimization
+              - Market timing and trends
+              - Specific actionable advice based on their current holdings
+              
+              Keep responses informative but concise, and always maintain the ninja theme.`
+            },
+            {
+              role: 'user',
+              content: input
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      
+      const aiMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: data.reply || generateFallbackAdvice(portfolioContext, totalValue),
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: generateFallbackAdvice(portfolioContext, totalValue),
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateFallbackAdvice = (portfolioContext, totalValue) => {
+    if (!isConnected) {
+      return `🥷 Connect your wallet first, young ninja! Once connected, I can provide personalized strategies for your specific holdings.`;
+    }
+
+    if (totalValue === 0) {
+      return `🥷 Your vault is empty, ninja. Consider starting with blue-chip assets like BTC/ETH (60%), stablecoins for stability (20%), and promising alts (20%). Dollar-cost averaging is your friend! ⚡`;
+    }
+
+    return `🥷 Based on your holdings (${portfolioContext}), I recommend: 
+    
+    📊 Rebalance if any single asset exceeds 40% 
+    🛡️ Keep 15-20% in stablecoins for opportunities
+    ⚡ Set stop-losses at -15% for risk management
+    🎯 Take profits on assets up 50%+
+    
+    The crypto dojo rewards patience and discipline!`;
+  };
+
+  return (
+    <div className="glass glass-particles p-5 rounded-2xl mb-6">
+      <div className="flex items-center space-x-2 mb-4">
+        <GiKatana className="text-orange-400 text-xl" />
+        <h3 className="text-lg font-bold text-white tektur">Portfolio Sensei Chat</h3>
+        {isConnected && (
+          <div className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
+            Connected
+          </div>
+        )}
+      </div>
+
+      {/* Messages */}
+      <div className="h-64 overflow-y-auto mb-4 space-y-3">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-xs p-3 rounded-lg ${
+                message.type === 'user'
+                  ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
+                  : 'bg-black/30 text-gray-100 border border-orange-500/30'
+              }`}
+            >
+              <p className="text-sm">{message.content}</p>
+              <p className="text-xs opacity-70 mt-1">
+                {message.timestamp.toLocaleTimeString()}
               </p>
             </div>
           </div>
+        ))}
+        
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-black/30 p-3 rounded-lg border border-orange-500/30">
+              <div className="flex items-center space-x-2">
+                <FaSpinner className="animate-spin text-orange-400" />
+                <span className="text-sm text-gray-300">Ninja sensei is thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="flex space-x-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          placeholder={isConnected ? "Ask about portfolio strategies..." : "Connect wallet for personalized advice..."}
+          className="flex-1 bg-black/30 border border-gray-700/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
+          disabled={loading}
+        />
+        <button
+          onClick={sendMessage}
+          disabled={loading || !input.trim()}
+          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 disabled:opacity-50 p-2 rounded-lg transition-colors"
+        >
+          <FaPaperPlane className="text-white" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Main Component
+export default function FinjaCoinAgent() {
+  const { address, isConnected } = useAccount();
+  const { data: balance } = useBalance({ address });
+  
+  const [coins, setCoins] = useState([]);
+  const [selectedCoin, setSelectedCoin] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userAssets, setUserAssets] = useState([]);
+
+  // Mock ninja coins data
+  const ninjaCoins = [
+    {
+      id: 'btc',
+      symbol: 'BTC',
+      name: 'Bitcoin',
+      agentName: 'Shadow Bitcoin Master',
+      rank: 'Legendary',
+      specialty: 'Whale Hunt Specialist',
+      stats: {
+        accuracy: 98,
+        aim: '98%',
+        speed: '225ms',
+        hits: 54,
+        guard: '97%',
+        flow: '81%'
+      }
+    },
+    {
+      id: 'eth',
+      symbol: 'ETH',
+      name: 'Ethereum',
+      agentName: 'Phantom Ethereum Sensei',
+      rank: 'Elite',
+      specialty: 'DeFi Intelligence Expert',
+      stats: {
+        accuracy: 96,
+        aim: '96%',
+        speed: '180ms',
+        hits: 67,
+        guard: '94%',
+        flow: '88%'
+      }
+    }
+  ];
+
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setCoins(ninjaCoins);
+      setSelectedCoin(ninjaCoins[0]);
+      setLoading(false);
+    }, 1500);
+  }, []);
+
+  // Update user assets when balance changes
+  useEffect(() => {
+    if (balance && address && isConnected) {
+      const ethValue = parseFloat(formatEther(balance.value));
+      const mockPrices = { ETH: 3247.50, USDC: 1.00, BTC: 110799.00 };
+      
+      const assets = [
+        {
+          symbol: 'ETH',
+          name: 'Ethereum',
+          balance: ethValue,
+          value: ethValue * mockPrices.ETH,
+          changeValue: 2.14,
+          change24h: '+2.14%'
+        },
+        {
+          symbol: 'USDC',
+          name: 'USD Coin', 
+          balance: ethValue * 500,
+          value: ethValue * 500 * mockPrices.USDC,
+          changeValue: 0.01,
+          change24h: '+0.01%'
+        }
+      ].filter(asset => asset.balance > 0);
+      
+      setUserAssets(assets);
+    } else {
+      setUserAssets([]);
+    }
+  }, [balance, address, isConnected]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen text-white pb-24">
+        <div className="glass glass-particles p-8 rounded-2xl text-center mt-8">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-white">🥷 Initializing ninja intelligence...</p>
         </div>
       </div>
-    </motion.div>
-  );
-};
+    );
+  }
 
-export default RandomLottoParticipationEngine;
+  const coin = selectedCoin;
+  if (!coin) return null;
+
+  return (
+    <div className="min-h-screen text-white pb-24">
+      {/* Header */}
+      <motion.div 
+        className="glass glass-edges glass-p mb-6 mt-4"
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="flex items-center justify-between p-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+              <GiNinjaMask className="text-2xl text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-white tektur">{coin.agentName}</h1>
+              <p className="text-orange-400 text-sm">{coin.rank} • {coin.specialty}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-orange-400 font-bold text-sm">{coin.rank}</div>
+            <div className="text-xs text-gray-400">{coin.symbol}</div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Wallet Connection */}
+      <NinjaWalletConnect />
+
+      {/* User Assets Display */}
+      <UserAssetsDisplay balance={balance} address={address} />
+
+      {/* Ninja Stats Grid */}
+      <motion.div 
+        className="glass glass-particles p-5 rounded-2xl mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <div className="flex items-center space-x-2 mb-4">
+          <GiKatana className="text-orange-400 text-xl" />
+          <h3 className="text-lg font-bold text-white tektur">Ninja Combat Stats</h3>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          {Object.entries(coin.stats).map(([key, value], index) => (
+            <motion.div
+              key={key}
+              className="glass-particles bg-gray-800/30 p-3 rounded-xl text-center"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
+            >
+              <div className="text-gray-400 text-xs capitalize mb-1">{key}</div>
+              <div className="text-lg font-bold text-orange-400">{value}</div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Enhanced Portfolio Chat Bot */}
+      <NinjaPortfolioChat 
+        userAssets={userAssets} 
+        selectedCoin={selectedCoin} 
+        isConnected={isConnected}
+      />
+
+      {/* Coin Selector */}
+      <motion.div 
+        className="glass glass-particles p-5 rounded-2xl mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <h3 className="text-lg font-bold text-white tektur mb-4 flex items-center space-x-2">
+          <GiNinjaHead className="text-orange-400" />
+          <span>Select Ninja Agent</span>
+        </h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          {coins.map((c) => (
+            <motion.button
+              key={c.id}
+              onClick={() => setSelectedCoin(c)}
+              className={`p-4 rounded-xl transition-all ${
+                selectedCoin?.id === c.id 
+                  ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white' 
+                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold">{c.symbol[0]}</span>
+                </div>
+                <div className="text-left">
+                  <div className="font-bold text-sm">{c.symbol}</div>
+                  <div className="text-xs opacity-70">{c.rank}</div>
+                </div>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
