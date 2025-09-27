@@ -18,6 +18,8 @@ import { GoTasklist } from "react-icons/go";
 import ProjectInfo from '@/components/Info';
 import { FaInfo } from "react-icons/fa6";
 import TaskCenter from '@/components/TaskCenter';
+import RandomLottoLeaderboard from '@/components/Leaderboard';
+import RandomLottoParticipationEngine from '@/components/CoreEngine';
 
 
 // Earning Timer Component
@@ -507,7 +509,8 @@ function TelegramMiniApp() {
   
   const renderHomeContent = () => (
     <div className="space-y-6">
-      <DataCenterHome />
+      <RandomLottoParticipationEngine/>
+      {/* <DataCenterHome /> */}
       <SocialTask />
       {/* <EarningTimer /> */}
       <UserBalance />
