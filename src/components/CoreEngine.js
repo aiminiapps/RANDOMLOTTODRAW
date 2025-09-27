@@ -3,724 +3,812 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FaFire, FaBolt, FaEye, FaShieldAlt, FaRocket, 
-  FaChartLine, FaCoins, FaSync, FaStar, FaWallet,
-  FaPaperPlane, FaSpinner
-} from 'react-icons/fa';
-import { 
-  GiNinjaStar, GiNinjaMask, GiShurikens, 
-  GiTargetPrize, GiKatana, GiNinjaHead 
-} from 'react-icons/gi';
-import { useAccount, useBalance, useDisconnect } from 'wagmi';
+  FiCheck, 
+  FiLoader, 
+  FiAlertTriangle,
+  FiTarget,
+  FiZap,
+  FiShield,
+  FiTrendingUp,
+  FiDollarSign,
+  FiGift,
+  FiUsers,
+  FiStar,
+  FiCreditCard,
+  FiExternalLink,
+  FiRefreshCw,
+  FiAward,
+  FiHash,
+  FiCalendar,
+  FiClock,
+  FiShoppingCart,
+  FiCopy
+} from 'react-icons/fi';
+import { CiWallet } from "react-icons/ci";
+import { useAccount, useBalance, useDisconnect, useSwitchChain } from 'wagmi';
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { formatEther } from 'viem';
-import Image from 'next/image';
-import { IoMdTrendingUp, IoMdTrendingDown } from "react-icons/io";
+import { formatEther, formatUnits } from 'viem';
+import { bsc } from 'wagmi/chains';
 
-// Enhanced wallet connection with multi-wallet support
-function NinjaWalletConnect() {
-  const { address, isConnected, connector } = useAccount();
+// RLT Token Contract Configuration
+const RLT_CONTRACT_ADDRESS = '0x27FDc94c04Ea70D3B9FEFd1fB8f5508f94f6a815';
+
+const RandomLottoParticipationEngine = () => {
+  // Wagmi hooks for EVM wallets
+  const { address, isConnected, connector, chainId } = useAccount();
   const { disconnect } = useDisconnect();
   const { open } = useWeb3Modal();
+  const { switchChain } = useSwitchChain();
   const tonWallet = useTonWallet();
+  
+  // Get balances
+  const { data: bnbBalance } = useBalance({ address });
+  const { data: rltBalance } = useBalance({ 
+    address, 
+    token: RLT_CONTRACT_ADDRESS
+  });
 
   // Detect Telegram environment
   const isTelegram = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
+  const isWrongNetwork = chainId && chainId !== bsc.id;
+  
+  // Use TON or EVM based on environment
+  const isWalletConnected = isTelegram ? !!tonWallet : isConnected;
+  const walletAddress = isTelegram ? tonWallet?.account?.address : address;
 
-  if (isTelegram) {
-    return (
-      <div className="glass glass-particles p-4 rounded-xl mb-6">
-        <div className="flex flex-col items-center space-y-3">
-          <h3 className="text-white font-bold tektur flex items-center space-x-2">
-            <GiNinjaMask />
-            <span>Connect TON Wallet</span>
-          </h3>
-          <TonConnectButton className="!bg-gradient-to-r !from-orange-600 !to-red-600 !px-6 !py-3 !rounded-xl !font-bold" />
-          {tonWallet && (
-            <div className="text-center">
-              <p className="text-orange-400 text-sm mb-2">
-                🥷 Connected: {tonWallet.account.address.slice(0, 6)}...{tonWallet.account.address.slice(-4)}
-              </p>
-              <p className="text-green-400 text-xs">TON Network</p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  // Balance State (Real + Simulated)
+  const [balanceState, setBalanceState] = useState({
+    realRLT: '0',
+    simulatedRLT: '0',
+    nativeBalance: '0',
+    isLoading: false
+  });
 
-  return (
-    <div className="glass glass-particles p-4 rounded-xl mb-6">
-      <div className="text-center">
-        {isConnected ? (
-          <div className="space-y-3">
-            <div className="flex items-center justify-center space-x-2 text-orange-400">
-              <GiNinjaStar />
-              <span className="font-bold">Wallet Connected</span>
-            </div>
-            <div className="bg-black/20 p-3 rounded-lg">
-              <p className="text-white text-sm">🥷 {address?.slice(0, 6)}...{address?.slice(-4)}</p>
-              <p className="text-green-400 text-xs mt-1">
-                Via {connector?.name || 'Unknown'}
-              </p>
-            </div>
-            <button
-              onClick={() => disconnect()}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-            >
-              Disconnect
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <h3 className="text-white font-bold tektur mb-4">Connect Your Wallet</h3>
-            <button
-              onClick={() => open()}
-              className="glass-button w-full py-3 px-6 rounded-xl font-bold flex items-center justify-center space-x-2"
-            >
-              <FaWallet />
-              <span>Connect Wallet</span>
-            </button>
-            <p className="text-gray-400 text-xs">
-              Supports MetaMask, Trust Wallet, WalletConnect & 400+ wallets
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+  // Participation State
+  const [participationState, setParticipationState] = useState({
+    amount: '',
+    isParticipating: false,
+    poolTotal: '0',
+    poolThreshold: '1000',
+    myTickets: 0,
+    myPasses: [],
+    participationHistory: []
+  });
 
-// Enhanced User Assets Display Component
-function UserAssetsDisplay({ balance, address }) {
-  const { isConnected } = useAccount(); // ✅ FIXED: Added isConnected from useAccount hook
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [totalValue, setTotalValue] = useState(0);
+  // App State
+  const [appState, setAppState] = useState({
+    simulatedBalances: {},
+    totalParticipants: 0,
+    currentRound: 1,
+    lastDrawWinner: null
+  });
 
-  // Mock price data (in production, fetch from real API)
-  const mockPrices = {
-    ETH: 3247.50,
-    BTC: 110799.00,
-    USDC: 1.00,
-    USDT: 1.00,
-    BNB: 645.30,
-    ADA: 1.25,
-    DOT: 18.45,
-    MATIC: 2.15
+  // UI State
+  const [uiState, setUiState] = useState({
+    error: null,
+    showPassModal: false,
+    activePass: null,
+    showBuyModal: false,
+    copiedAddress: false
+  });
+
+  const [telegramUser, setTelegramUser] = useState(null);
+
+  // Get Telegram user data
+  useEffect(() => {
+    try {
+      const telegram = window?.Telegram?.WebApp;
+      if (telegram?.initDataUnsafe?.user) {
+        setTelegramUser({
+          firstName: telegram.initDataUnsafe.user.first_name,
+          username: telegram.initDataUnsafe.user.username,
+          id: telegram.initDataUnsafe.user.id
+        });
+      }
+    } catch (error) {
+      console.log('Telegram WebApp not available');
+    }
+  }, []);
+
+  // Update balances when wallet connects
+  useEffect(() => {
+    if (walletAddress) {
+      if (isTelegram) {
+        // TON wallet - set mock balance
+        setBalanceState({
+          realRLT: '0', // TON doesn't have RLT
+          simulatedRLT: '0',
+          nativeBalance: '0', // Would need TON balance API
+          isLoading: false
+        });
+      } else {
+        // EVM wallet - use real balances
+        setBalanceState({
+          realRLT: rltBalance ? formatUnits(rltBalance.value, rltBalance.decimals) : '0',
+          simulatedRLT: appState.simulatedBalances[walletAddress.toLowerCase()] || '0',
+          nativeBalance: bnbBalance ? formatEther(bnbBalance.value) : '0',
+          isLoading: false
+        });
+      }
+    } else {
+      setBalanceState({
+        realRLT: '0',
+        simulatedRLT: '0',
+        nativeBalance: '0',
+        isLoading: false
+      });
+    }
+  }, [walletAddress, rltBalance, bnbBalance, appState.simulatedBalances, isTelegram]);
+
+  // Switch to BSC Network
+  const switchToBSC = useCallback(async () => {
+    if (switchChain && !isTelegram) {
+      try {
+        await switchChain({ chainId: bsc.id });
+      } catch (error) {
+        console.error('Failed to switch to BSC:', error);
+        setUiState(prev => ({ ...prev, error: 'Failed to switch network' }));
+      }
+    }
+  }, [switchChain, isTelegram]);
+
+  // Generate unique pass ID
+  const generatePassId = () => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 6);
+    const network = isTelegram ? 'TON' : 'RLT';
+    return `${network}-${timestamp.toString(36).toUpperCase()}-${random.toUpperCase()}`;
   };
 
-  // Generate enhanced asset data
-  const generateUserAssets = useCallback(() => {
-    if (!balance || !address) return [];
-
-    const ethValue = parseFloat(formatEther(balance.value));
-    
-    // Create diverse portfolio based on ETH balance
-    const portfolioAssets = [
-      {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        balance: ethValue,
-        price: mockPrices.ETH,
-        value: ethValue * mockPrices.ETH,
-        icon: '🔹',
-        change24h: '+2.14%',
-        changeValue: 2.14,
-        network: 'Ethereum'
-      }
+  // Generate pass pattern
+  const generatePassPattern = (passId) => {
+    const seed = passId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const patterns = [
+      'repeating-linear-gradient(45deg, rgba(163,255,18,0.1) 0px, rgba(163,255,18,0.1) 10px, transparent 10px, transparent 20px)',
+      'repeating-linear-gradient(90deg, rgba(163,255,18,0.05) 0px, rgba(163,255,18,0.05) 15px, transparent 15px, transparent 30px)',
+      'radial-gradient(circle at 20% 80%, rgba(163,255,18,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(163,255,18,0.05) 0%, transparent 50%)',
+      'linear-gradient(135deg, rgba(163,255,18,0.08) 0%, transparent 50%, rgba(163,255,18,0.08) 100%)'
     ];
+    return patterns[seed % patterns.length];
+  };
 
-    // Add additional mock assets if user has ETH
-    if (ethValue > 0) {
-      const additionalAssets = [
+  // Purchase Pass
+  const purchasePass = useCallback(() => {
+    const requiredAmount = isTelegram ? 1.0 : 500; // 1 TON or 500 RLT
+    const currentBalance = isTelegram ? 
+      parseFloat(balanceState.nativeBalance) : 
+      parseFloat(balanceState.realRLT);
+    
+    if (currentBalance < requiredAmount) {
+      setUiState(prev => ({ ...prev, showBuyModal: true }));
+      return;
+    }
+
+    const passId = generatePassId();
+    const newPass = {
+      id: passId,
+      purchaseDate: new Date(),
+      tickets: isTelegram ? 10 : 5, // Different ticket amounts for different networks
+      status: 'active',
+      pattern: generatePassPattern(passId),
+      roundValid: appState.currentRound,
+      tokenSpent: requiredAmount,
+      network: isTelegram ? 'TON' : 'BSC'
+    };
+
+    setParticipationState(prev => ({
+      ...prev,
+      myPasses: [newPass, ...prev.myPasses],
+      myTickets: prev.myTickets + newPass.tickets,
+      poolTotal: (parseFloat(prev.poolTotal) + requiredAmount).toFixed(2),
+      participationHistory: [
         {
-          symbol: 'USDC',
-          name: 'USD Coin',
-          balance: ethValue * 800,
-          price: mockPrices.USDC,
-          value: ethValue * 800 * mockPrices.USDC,
-          icon: '💵',
-          change24h: '+0.01%',
-          changeValue: 0.01,
-          network: 'Ethereum'
+          id: Date.now(),
+          type: 'pass_purchase',
+          amount: requiredAmount,
+          tickets: newPass.tickets,
+          timestamp: new Date(),
+          status: 'confirmed'
         },
-        {
-          symbol: 'BTC',
-          name: 'Bitcoin',
-          balance: ethValue * 0.025,
-          price: mockPrices.BTC,
-          value: ethValue * 0.025 * mockPrices.BTC,
-          icon: '₿',
-          change24h: '-1.39%',
-          changeValue: -1.39,
-          network: 'Bitcoin'
-        }
-      ];
+        ...prev.participationHistory
+      ]
+    }));
 
-      portfolioAssets.push(...additionalAssets.filter(asset => asset.balance > 0.001));
+    setAppState(prev => ({
+      ...prev,
+      totalParticipants: prev.totalParticipants + 1
+    }));
+
+    setUiState(prev => ({ 
+      ...prev, 
+      activePass: newPass,
+      showPassModal: true 
+    }));
+
+  }, [balanceState.realRLT, balanceState.nativeBalance, isTelegram, appState.currentRound]);
+
+  // Copy address to clipboard
+  const copyAddress = useCallback(async () => {
+    if (walletAddress) {
+      try {
+        await navigator.clipboard.writeText(walletAddress);
+        setUiState(prev => ({ ...prev, copiedAddress: true }));
+        setTimeout(() => {
+          setUiState(prev => ({ ...prev, copiedAddress: false }));
+        }, 2000);
+      } catch (error) {
+        console.error('Failed to copy address:', error);
+      }
     }
+  }, [walletAddress]);
 
-    return portfolioAssets;
-  }, [balance, address]);
-
-  useEffect(() => {
-    if (balance && address && isConnected) {
-      setLoading(true);
-      setTimeout(() => {
-        const generatedAssets = generateUserAssets();
-        setAssets(generatedAssets);
-        setTotalValue(generatedAssets.reduce((sum, asset) => sum + asset.value, 0));
-        setLoading(false);
-      }, 1000);
-    } else {
-      setAssets([]);
-      setTotalValue(0);
-    }
-  }, [balance, address, isConnected, generateUserAssets]);
-
-  // ✅ FIXED: Show wallet not connected message
-  if (!address || !isConnected) {
-    return (
-      <motion.div 
-        className="glass glass-particles p-5 rounded-2xl mb-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white tektur flex items-center space-x-2">
-            <FaCoins className="text-orange-400" />
-            <span>Ninja Portfolio</span>
-          </h3>
+  // Digital Pass Component
+  const DigitalPass = ({ pass, isModal = false }) => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={`relative overflow-hidden rounded-3xl border-2 border-green-400/30 ${
+        isModal ? 'w-80 h-48' : 'w-full h-32'
+      }`}
+      style={{ background: pass.pattern }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-green-900/80 via-green-800/60 to-green-900/80"></div>
+      
+      {/* Holographic effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-pulse"></div>
+      
+      <div className="relative z-10 p-4 h-full flex flex-col justify-between">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-white font-bold text-sm">RandomLotto {pass.network}</h3>
+            <p className="text-green-400 text-xs font-mono">{pass.id}</p>
+          </div>
+          <div className="text-right">
+            <div className="text-yellow-400 font-bold text-lg">{pass.tickets}</div>
+            <div className="text-xs text-gray-300">Tickets</div>
+          </div>
         </div>
         
-        <div className="text-center py-12">
-          <FaWallet className="text-gray-500 text-4xl mx-auto mb-4" />
-          <p className="text-gray-400 text-lg font-medium mb-2">Wallet Not Connected</p>
-          <p className="text-gray-500 text-sm">
-            Connect your wallet to view your ninja portfolio
-          </p>
+        <div className="flex justify-between items-end">
+          <div>
+            <div className="text-xs text-gray-300">Round #{pass.roundValid}</div>
+            <div className="text-white text-xs">{pass.tokenSpent} {pass.network === 'TON' ? 'TON' : 'RLT'}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-white text-xs">
+              {pass.purchaseDate.toLocaleDateString()}
+            </div>
+          </div>
         </div>
-      </motion.div>
-    );
-  }
+      </div>
 
-  if (loading) {
-    return (
-      <motion.div 
-        className="glass glass-particles p-5 rounded-2xl mb-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      {/* Shimmer effect */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400/60 to-transparent animate-pulse"></div>
+    </motion.div>
+  );
+
+  // Buy Modal
+  const BuyModal = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={() => setUiState(prev => ({ ...prev, showBuyModal: false }))}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="glass-warm rounded-3xl p-6 max-w-sm w-full relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="text-center py-8">
-          <FaSpinner className="animate-spin text-orange-400 text-2xl mx-auto mb-3" />
-          <p className="text-white">🥷 Scanning your ninja vault...</p>
+        <div className="glass-content relative z-10">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 glass-light rounded-3xl flex items-center justify-center mx-auto mb-4">
+              <FiShoppingCart className="w-8 h-8 text-green-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Need More {isTelegram ? 'TON' : 'RLT'}?</h3>
+            <p className="text-sm text-gray-300">
+              You need at least {isTelegram ? '1 TON' : '500 RLT'} to purchase a lottery pass
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="glass-dark rounded-2xl p-4 text-center">
+              <div className="text-2xl font-bold text-red-400 mb-1">
+                {isTelegram ? 
+                  parseFloat(balanceState.nativeBalance).toFixed(2) + ' TON' :
+                  parseFloat(balanceState.realRLT).toFixed(2) + ' RLT'
+                }
+              </div>
+              <div className="text-sm text-gray-400">Current Balance</div>
+            </div>
+
+            <button
+              onClick={() => {
+                if (isTelegram) {
+                  window.open('https://t.me/wallet', '_blank');
+                } else {
+                  window.open('https://pancakeswap.finance/swap?inputCurrency=BNB&outputCurrency=' + RLT_CONTRACT_ADDRESS, '_blank');
+                }
+              }}
+              className="glass-button w-full py-4 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <FiExternalLink className="w-5 h-5" />
+                <span>Buy {isTelegram ? 'TON' : 'RLT'}</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setUiState(prev => ({ ...prev, showBuyModal: false }))}
+              className="w-full py-3 text-gray-400 hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </motion.div>
+    </motion.div>
+  );
+
+  // Pass Modal
+  const PassModal = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={() => setUiState(prev => ({ ...prev, showPassModal: false }))}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="glass rounded-3xl p-6 max-w-sm w-full relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="glass-content relative z-10">
+          <div className="text-center mb-6">
+            <FiCheck className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Pass Purchased!</h3>
+            <p className="text-sm text-gray-300">
+              Your digital lottery pass has been activated
+            </p>
+          </div>
+
+          {uiState.activePass && (
+            <div className="mb-6">
+              <DigitalPass pass={uiState.activePass} isModal={true} />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="glass-dark rounded-2xl p-3 text-center">
+                <div className="text-lg font-bold text-green-400">{uiState.activePass?.tickets}</div>
+                <div className="text-xs text-gray-400">Tickets</div>
+              </div>
+              <div className="glass-dark rounded-2xl p-3 text-center">
+                <div className="text-lg font-bold text-white">#{appState.currentRound}</div>
+                <div className="text-xs text-gray-400">Round</div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setUiState(prev => ({ ...prev, showPassModal: false }))}
+              className="glass-button w-full py-3 rounded-2xl font-bold text-white"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
+  const hasEnoughBalance = isTelegram ? 
+    parseFloat(balanceState.nativeBalance) >= 1.0 :
+    parseFloat(balanceState.realRLT) >= 500;
+
+  // Not connected state
+  if (!isWalletConnected) {
+    return (
+      <div className="w-full max-w-md mx-auto space-y-4">
+        <div className="glass-warm rounded-3xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-400/10 to-transparent rounded-full blur-2xl"></div>
+          
+          <div className="glass-content relative z-10">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 glass-light rounded-3xl flex items-center justify-center mx-auto mb-4 relative">
+                <CiWallet className="w-8 h-8 text-green-400" />
+                <div className="absolute inset-0 bg-green-400/20 rounded-3xl animate-pulse"></div>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Connect {isTelegram ? 'TON' : 'Crypto'} Wallet</h2>
+              <p className="text-sm text-gray-300 leading-relaxed">
+                Connect your wallet to participate in RandomLotto draws using {isTelegram ? 'TON tokens' : 'RLT tokens on Binance Smart Chain'}
+              </p>
+            </div>
+
+            {isTelegram ? (
+              <div className="glass glass-particles p-4 rounded-xl mb-6">
+                <div className="flex flex-col items-center space-y-3">
+                  <h3 className="text-white font-bold flex items-center space-x-2">
+                    <CiWallet />
+                    <span>Connect TON Wallet</span>
+                  </h3>
+                  <TonConnectButton />
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => open()}
+                className="glass-button w-full py-4 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <CiWallet className="w-5 h-5" />
+                  <span>Connect Wallet</span>
+                </div>
+              </button>
+            )}
+
+            {uiState.error && (
+              <div className="mt-4 p-4 glass-dark border-2 border-red-400/30 rounded-2xl">
+                <div className="flex items-center space-x-2">
+                  <FiAlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                  <p className="text-red-400 text-sm">{uiState.error}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 space-y-3">
+              <div className="glass-cool rounded-2xl p-4">
+                <div className="flex items-center space-x-3">
+                  <FiShield className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <h4 className="text-white font-bold text-sm">Secure Connection</h4>
+                    <p className="text-xs text-gray-400">We never store your private keys</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-cool rounded-2xl p-4">
+                <div className="flex items-center space-x-3">
+                  <FiGift className="w-5 h-5 text-purple-400" />
+                  <div>
+                    <h4 className="text-white font-bold text-sm">Demo Mode</h4>
+                    <p className="text-xs text-gray-400">Real wallet data, simulated transfers</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
     <motion.div 
-      className="glass glass-particles p-5 rounded-2xl mb-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      className="w-full max-w-md mx-auto space-y-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
-      {/* Portfolio Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-white tektur flex items-center space-x-2">
-          <FaCoins className="text-orange-400" />
-          <span>Ninja Portfolio</span>
-        </h3>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-orange-400">
-            ${totalValue.toFixed(2)}
+      {/* Wrong Network Warning for EVM */}
+      {!isTelegram && isWrongNetwork && (
+        <div className="glass-dark border-2 border-yellow-400/30 rounded-2xl p-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <FiAlertTriangle className="w-5 h-5 text-yellow-400" />
+            <p className="text-yellow-400 font-bold">Wrong Network</p>
           </div>
-          <div className="text-sm text-gray-400">Total Value</div>
-        </div>
-      </div>
-
-      {/* Assets List */}
-      <div className="space-y-3">
-        {assets.map((asset, index) => (
-          <motion.div
-            key={asset.symbol}
-            className="flex items-center justify-between bg-black/20 p-4 rounded-xl border border-gray-700/30 hover:border-orange-500/30 transition-colors"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
+          <p className="text-gray-300 text-sm mb-3">
+            Please switch to Binance Smart Chain to continue
+          </p>
+          <button
+            onClick={switchToBSC}
+            className="glass-button w-full py-2 rounded-xl text-white font-medium"
           >
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white text-xl">
-                {asset.icon}
+            Switch to BSC
+          </button>
+        </div>
+      )}
+
+      {/* Wallet Header */}
+      <div className="glass-light rounded-3xl p-6">
+        <div className="glass-content">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 glass-warm rounded-2xl flex items-center justify-center">
+                <FiCheck className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <div className="text-white font-bold text-lg">{asset.name}</div>
-                <div className="text-gray-400 text-sm">
-                  {asset.balance.toFixed(6)} {asset.symbol}
-                </div>
-                <div className="text-xs text-gray-500">{asset.network}</div>
+                <p className="text-white font-bold">
+                  {telegramUser?.firstName || 'Player'}
+                </p>
+                <button
+                  onClick={copyAddress}
+                  className="text-sm text-gray-400 font-mono hover:text-white transition-colors flex items-center space-x-1"
+                >
+                  <span>{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</span>
+                  {uiState.copiedAddress ? (
+                    <FiCheck className="w-3 h-3 text-green-400" />
+                  ) : (
+                    <FiCopy className="w-3 h-3" />
+                  )}
+                </button>
               </div>
             </div>
             
-            <div className="text-right">
-              <div className="text-white font-bold text-lg">
-                ${asset.value.toFixed(2)}
-              </div>
-              <div className="text-sm text-gray-400">
-                ${asset.price.toLocaleString()}
-              </div>
-              <div className={`text-sm flex items-center space-x-1 ${
-                asset.changeValue >= 0 ? 'text-green-400' : 'text-red-400'
-              }`}>
-                {asset.changeValue >= 0 ? <IoMdTrendingUp /> : <IoMdTrendingDown />}
-                <span>{asset.change24h}</span>
-              </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  // Refresh balances would go here
+                }}
+                disabled={balanceState.isLoading}
+                className="p-2 glass-dark rounded-xl hover:glass-light transition-all duration-200"
+              >
+                <FiRefreshCw className={`w-4 h-4 text-gray-400 ${balanceState.isLoading ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={() => {
+                  if (isTelegram) {
+                    // TON disconnect would be handled by TonConnect
+                  } else {
+                    disconnect();
+                  }
+                }}
+                className="text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Disconnect
+              </button>
             </div>
-          </motion.div>
-        ))}
+          </div>
+
+          {/* Enhanced Balance Display */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="glass-dark rounded-2xl p-4 text-center relative overflow-hidden">
+              {balanceState.isLoading && (
+                <div className="absolute inset-0 bg-gray-800/50 flex items-center justify-center rounded-2xl">
+                  <FiLoader className="w-4 h-4 animate-spin text-gray-400" />
+                </div>
+              )}
+              <div className={`text-lg font-bold ${!hasEnoughBalance ? 'text-red-400' : 'text-white'}`}>
+                {isTelegram ? 
+                  parseFloat(balanceState.nativeBalance).toFixed(2) :
+                  parseFloat(balanceState.realRLT).toLocaleString()
+                }
+              </div>
+              <div className="text-xs text-gray-400">{isTelegram ? 'TON' : 'RLT'} Balance</div>
+              <div className="text-xs text-green-400 mt-1">{isTelegram ? 'TON Network' : 'On-Chain'}</div>
+            </div>
+            
+            <div className="glass-dark rounded-2xl p-4 text-center">
+              <div className="text-lg font-bold text-green-400">
+                {participationState.myTickets}
+              </div>
+              <div className="text-xs text-gray-400">My Tickets</div>
+              <div className="text-xs text-blue-400 mt-1">Active</div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {!hasEnoughBalance ? (
+              <button
+                onClick={() => setUiState(prev => ({ ...prev, showBuyModal: true }))}
+                className="glass-button py-3 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <FiShoppingCart className="w-4 h-4" />
+                  <span>Buy {isTelegram ? 'TON' : 'RLT'}</span>
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={purchasePass}
+                className="glass-button py-3 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <FiCreditCard className="w-4 h-4" />
+                  <span>Buy Pass</span>
+                </div>
+              </button>
+            )}
+            
+            <button
+              onClick={() => {
+                const explorerUrl = isTelegram ?
+                  `https://tonscan.org/address/${walletAddress}` :
+                  `https://bscscan.com/address/${walletAddress}`;
+                window.open(explorerUrl, '_blank');
+              }}
+              className="glass py-3 rounded-2xl font-bold text-white border-2 border-gray-600/30 hover:border-green-400/50 transition-all duration-300"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <FiExternalLink className="w-4 h-4" />
+                <span>Explorer</span>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Portfolio Stats */}
-      {assets.length > 0 && (
-        <div className="mt-6 p-4 bg-black/20 rounded-xl">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-orange-400 font-bold text-lg">{assets.length}</div>
-              <div className="text-xs text-gray-400">Assets</div>
+      {/* My Passes Section */}
+      {participationState.myPasses.length > 0 && (
+        <div className="glass rounded-3xl p-6">
+          <div className="glass-content">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+              <FiCreditCard className="w-5 h-5 text-green-400" />
+              <span>My Passes</span>
+              <span className="text-sm text-gray-400">({participationState.myPasses.length})</span>
+            </h3>
+
+            <div className="space-y-3">
+              {participationState.myPasses.slice(0, 3).map((pass, index) => (
+                <DigitalPass key={pass.id} pass={pass} />
+              ))}
             </div>
-            <div>
-              <div className="text-green-400 font-bold text-lg">
-                {assets.filter(a => a.changeValue >= 0).length}
-              </div>
-              <div className="text-xs text-gray-400">Gaining</div>
-            </div>
-            <div>
-              <div className="text-blue-400 font-bold text-lg">
-                {Math.max(...assets.map(a => Math.abs(a.changeValue))).toFixed(2)}%
-              </div>
-              <div className="text-xs text-gray-400">Best Move</div>
-            </div>
+
+            {participationState.myPasses.length > 3 && (
+              <button className="w-full mt-3 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+                View All Passes ({participationState.myPasses.length})
+              </button>
+            )}
           </div>
         </div>
       )}
-    </motion.div>
-  );
-}
 
-// Enhanced AI Portfolio Chat Bot
-function NinjaPortfolioChat({ userAssets, selectedCoin, isConnected }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+      {/* Pool Status */}
+      <div className="glass-cool rounded-2xl p-6">
+        <div className="glass-content">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <FiTarget className="w-5 h-5 text-blue-400" />
+            <span>Current Draw</span>
+          </h3>
 
-  useEffect(() => {
-    // Dynamic greeting based on wallet connection and assets
-    const getGreetingMessage = () => {
-      if (!isConnected) {
-        return `🥷 Greetings, aspiring ninja! Connect your wallet to unlock personalized portfolio strategies and tactical advice!`;
-      }
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-300">Prize Pool</span>
+              <span className="text-lg font-bold text-white">
+                {parseFloat(participationState.poolTotal).toLocaleString()} {isTelegram ? 'TON' : 'RLT'}
+              </span>
+            </div>
 
-      if (userAssets?.length > 0) {
-        const totalValue = userAssets.reduce((sum, asset) => sum + asset.value, 0);
-        const topAsset = userAssets.reduce((max, asset) => asset.value > max.value ? asset : max);
-        
-        return `🥷 Welcome back, ninja warrior! I see you hold $${totalValue.toFixed(2)} across ${userAssets.length} assets, with ${topAsset.symbol} as your strongest position. How can I help optimize your portfolio strategy today?`;
-      }
+            <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 h-3 rounded-full transition-all duration-1000 relative"
+                style={{ 
+                  width: `${Math.min((participationState.poolTotal / participationState.poolThreshold) * 100, 100)}%` 
+                }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
+              </div>
+            </div>
 
-      return `🥷 Wallet connected! I'm ready to help you build a legendary portfolio. What's your investment strategy, fellow ninja?`;
-    };
-
-    setMessages([{
-      id: 1,
-      type: 'ai',
-      content: getGreetingMessage(),
-      timestamp: new Date()
-    }]);
-  }, [selectedCoin, userAssets, isConnected]);
-
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const userMessage = {
-      id: Date.now(),
-      type: 'user',
-      content: input,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setLoading(true);
-    setInput('');
-
-    try {
-      // Enhanced context with detailed portfolio info
-      const portfolioContext = userAssets?.length > 0 
-        ? userAssets.map(asset => 
-            `${asset.symbol}: ${asset.balance.toFixed(4)} ($${asset.value.toFixed(2)}) - ${asset.change24h}`
-          ).join(', ')
-        : 'No assets detected - wallet not connected or empty';
-
-      const totalValue = userAssets?.reduce((sum, asset) => sum + asset.value, 0) || 0;
-      const bestPerformer = userAssets?.reduce((best, asset) => 
-        asset.changeValue > (best?.changeValue || -Infinity) ? asset : best
-      );
-
-      const response = await fetch('/api/agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: 'system',
-              content: `You are a ninja portfolio advisor specializing in ${selectedCoin?.name || 'crypto'}. 
-              
-              User's portfolio: ${portfolioContext}
-              Total portfolio value: $${totalValue.toFixed(2)}
-              Best performing asset: ${bestPerformer?.symbol || 'None'} (${bestPerformer?.change24h || 'N/A'})
-              Wallet status: ${isConnected ? 'Connected' : 'Not connected'}
-              
-              Provide tactical advice in ninja-themed language with emojis. Focus on:
-              - Portfolio diversification and risk management
-              - Strategic entry/exit points
-              - Asset allocation optimization
-              - Market timing and trends
-              - Specific actionable advice based on their current holdings
-              
-              Keep responses informative but concise, and always maintain the ninja theme.`
-            },
-            {
-              role: 'user',
-              content: input
-            }
-          ]
-        })
-      });
-
-      const data = await response.json();
-      
-      const aiMessage = {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: data.reply || generateFallbackAdvice(portfolioContext, totalValue),
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('Chat error:', error);
-      
-      const errorMessage = {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: generateFallbackAdvice(portfolioContext, totalValue),
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateFallbackAdvice = (portfolioContext, totalValue) => {
-    if (!isConnected) {
-      return `🥷 Connect your wallet first, young ninja! Once connected, I can provide personalized strategies for your specific holdings.`;
-    }
-
-    if (totalValue === 0) {
-      return `🥷 Your vault is empty, ninja. Consider starting with blue-chip assets like BTC/ETH (60%), stablecoins for stability (20%), and promising alts (20%). Dollar-cost averaging is your friend! ⚡`;
-    }
-
-    return `🥷 Based on your holdings (${portfolioContext}), I recommend: 
-    
-    📊 Rebalance if any single asset exceeds 40% 
-    🛡️ Keep 15-20% in stablecoins for opportunities
-    ⚡ Set stop-losses at -15% for risk management
-    🎯 Take profits on assets up 50%+
-    
-    The crypto dojo rewards patience and discipline!`;
-  };
-
-  return (
-    <div className="glass glass-particles p-5 rounded-2xl mb-6">
-      <div className="flex items-center space-x-2 mb-4">
-        <GiKatana className="text-orange-400 text-xl" />
-        <h3 className="text-lg font-bold text-white tektur">Portfolio Sensei Chat</h3>
-        {isConnected && (
-          <div className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
-            Connected
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-sm font-bold text-white">
+                  {appState.totalParticipants.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-400">Players</div>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-green-400">
+                  #{appState.currentRound}
+                </div>
+                <div className="text-xs text-gray-400">Round</div>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-purple-400">
+                  {participationState.myTickets}
+                </div>
+                <div className="text-xs text-gray-400">My Tickets</div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="h-64 overflow-y-auto mb-4 space-y-3">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+      {/* Recent Activity */}
+      {participationState.participationHistory.length > 0 && (
+        <div className="glass-dark rounded-2xl p-4">
+          <h4 className="text-white font-bold mb-3 flex items-center space-x-2">
+            <FiTrendingUp className="w-4 h-4 text-blue-400" />
+            <span>Recent Activity</span>
+          </h4>
+          <div className="space-y-2">
+            {participationState.participationHistory.slice(0, 3).map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between p-2 glass-cool rounded-xl">
+                <div>
+                  <div className="text-sm text-white font-medium">
+                    Participated: {activity.amount} {isTelegram ? 'TON' : 'RLT'}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {activity.tickets} tickets • {activity.timestamp.toLocaleTimeString()}
+                  </div>
+                </div>
+                <div className="text-xs text-green-400 font-medium">
+                  {activity.status}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Error Display */}
+      <AnimatePresence>
+        {uiState.error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="glass-dark border-2 border-red-400/30 rounded-2xl p-4"
           >
-            <div
-              className={`max-w-xs p-3 rounded-lg ${
-                message.type === 'user'
-                  ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
-                  : 'bg-black/30 text-gray-100 border border-orange-500/30'
-              }`}
-            >
-              <p className="text-sm">{message.content}</p>
-              <p className="text-xs opacity-70 mt-1">
-                {message.timestamp.toLocaleTimeString()}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FiAlertTriangle className="w-5 h-5 text-red-400" />
+                <p className="text-red-400 text-sm">{uiState.error}</p>
+              </div>
+              <button
+                onClick={() => setUiState(prev => ({ ...prev, error: null }))}
+                className="text-xs text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Winner Announcement */}
+      {appState.lastDrawWinner && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-warm border-2 border-yellow-400/30 rounded-2xl p-4"
+        >
+          <div className="flex items-center space-x-2 mb-2">
+            <FiGift className="w-5 h-5 text-yellow-400" />
+            <p className="text-yellow-400 font-bold">Draw Complete!</p>
+          </div>
+          <p className="text-white text-sm">
+            Winner: {appState.lastDrawWinner.slice(0, 6)}...{appState.lastDrawWinner.slice(-4)}
+            {appState.lastDrawWinner.toLowerCase() === walletAddress?.toLowerCase() && (
+              <span className="text-green-400 font-bold ml-2">🎉 That's you!</span>
+            )}
+          </p>
+        </motion.div>
+      )}
+
+      {/* Info Card */}
+      <div className="glass-cool rounded-2xl p-4">
+        <div className="glass-content">
+          <div className="flex items-start space-x-3">
+            <FiShield className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-white font-bold mb-1">{isTelegram ? 'TON' : 'Demo'} Mode Active</h4>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                {isTelegram ? 
+                  'Using real TON wallet connection. Purchase passes with actual TON tokens for lottery participation.' :
+                  'This demo uses real RLT balance data from BSC but simulates transfers locally. No actual tokens are moved on the blockchain.'
+                }
               </p>
             </div>
           </div>
-        ))}
-        
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-black/30 p-3 rounded-lg border border-orange-500/30">
-              <div className="flex items-center space-x-2">
-                <FaSpinner className="animate-spin text-orange-400" />
-                <span className="text-sm text-gray-300">Ninja sensei is thinking...</span>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
-      {/* Input */}
-      <div className="flex space-x-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder={isConnected ? "Ask about portfolio strategies..." : "Connect wallet for personalized advice..."}
-          className="flex-1 bg-black/30 border border-gray-700/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50"
-          disabled={loading}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={loading || !input.trim()}
-          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 disabled:opacity-50 p-2 rounded-lg transition-colors"
-        >
-          <FaPaperPlane className="text-white" />
-        </button>
-      </div>
-    </div>
+      {/* Modals */}
+      <AnimatePresence>
+        {uiState.showPassModal && <PassModal />}
+        {uiState.showBuyModal && <BuyModal />}
+      </AnimatePresence>
+    </motion.div>
   );
-}
+};
 
-// Main Component
-export default function FinjaCoinAgent() {
-  const { address, isConnected } = useAccount();
-  const { data: balance } = useBalance({ address });
-  
-  const [coins, setCoins] = useState([]);
-  const [selectedCoin, setSelectedCoin] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [userAssets, setUserAssets] = useState([]);
-
-  // Mock ninja coins data
-  const ninjaCoins = [
-    {
-      id: 'btc',
-      symbol: 'BTC',
-      name: 'Bitcoin',
-      agentName: 'Shadow Bitcoin Master',
-      rank: 'Legendary',
-      specialty: 'Whale Hunt Specialist',
-      stats: {
-        accuracy: 98,
-        aim: '98%',
-        speed: '225ms',
-        hits: 54,
-        guard: '97%',
-        flow: '81%'
-      }
-    },
-    {
-      id: 'eth',
-      symbol: 'ETH',
-      name: 'Ethereum',
-      agentName: 'Phantom Ethereum Sensei',
-      rank: 'Elite',
-      specialty: 'DeFi Intelligence Expert',
-      stats: {
-        accuracy: 96,
-        aim: '96%',
-        speed: '180ms',
-        hits: 67,
-        guard: '94%',
-        flow: '88%'
-      }
-    }
-  ];
-
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setCoins(ninjaCoins);
-      setSelectedCoin(ninjaCoins[0]);
-      setLoading(false);
-    }, 1500);
-  }, []);
-
-  // Update user assets when balance changes
-  useEffect(() => {
-    if (balance && address && isConnected) {
-      const ethValue = parseFloat(formatEther(balance.value));
-      const mockPrices = { ETH: 3247.50, USDC: 1.00, BTC: 110799.00 };
-      
-      const assets = [
-        {
-          symbol: 'ETH',
-          name: 'Ethereum',
-          balance: ethValue,
-          value: ethValue * mockPrices.ETH,
-          changeValue: 2.14,
-          change24h: '+2.14%'
-        },
-        {
-          symbol: 'USDC',
-          name: 'USD Coin', 
-          balance: ethValue * 500,
-          value: ethValue * 500 * mockPrices.USDC,
-          changeValue: 0.01,
-          change24h: '+0.01%'
-        }
-      ].filter(asset => asset.balance > 0);
-      
-      setUserAssets(assets);
-    } else {
-      setUserAssets([]);
-    }
-  }, [balance, address, isConnected]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen text-white pb-24">
-        <div className="glass glass-particles p-8 rounded-2xl text-center mt-8">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"
-          />
-          <p className="text-white">🥷 Initializing ninja intelligence...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const coin = selectedCoin;
-  if (!coin) return null;
-
-  return (
-    <div className="min-h-screen text-white pb-24">
-      {/* Header */}
-      <motion.div 
-        className="glass glass-edges glass-p mb-6 mt-4"
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="flex items-center justify-between p-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-              <GiNinjaMask className="text-2xl text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-white tektur">{coin.agentName}</h1>
-              <p className="text-orange-400 text-sm">{coin.rank} • {coin.specialty}</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-orange-400 font-bold text-sm">{coin.rank}</div>
-            <div className="text-xs text-gray-400">{coin.symbol}</div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Wallet Connection */}
-      <NinjaWalletConnect />
-
-      {/* User Assets Display */}
-      <UserAssetsDisplay balance={balance} address={address} />
-
-      {/* Ninja Stats Grid */}
-      <motion.div 
-        className="glass glass-particles p-5 rounded-2xl mb-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <div className="flex items-center space-x-2 mb-4">
-          <GiKatana className="text-orange-400 text-xl" />
-          <h3 className="text-lg font-bold text-white tektur">Ninja Combat Stats</h3>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          {Object.entries(coin.stats).map(([key, value], index) => (
-            <motion.div
-              key={key}
-              className="glass-particles bg-gray-800/30 p-3 rounded-xl text-center"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 + index * 0.1 }}
-            >
-              <div className="text-gray-400 text-xs capitalize mb-1">{key}</div>
-              <div className="text-lg font-bold text-orange-400">{value}</div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Enhanced Portfolio Chat Bot */}
-      <NinjaPortfolioChat 
-        userAssets={userAssets} 
-        selectedCoin={selectedCoin} 
-        isConnected={isConnected}
-      />
-
-      {/* Coin Selector */}
-      <motion.div 
-        className="glass glass-particles p-5 rounded-2xl mb-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-      >
-        <h3 className="text-lg font-bold text-white tektur mb-4 flex items-center space-x-2">
-          <GiNinjaHead className="text-orange-400" />
-          <span>Select Ninja Agent</span>
-        </h3>
-        
-        <div className="grid grid-cols-2 gap-4">
-          {coins.map((c) => (
-            <motion.button
-              key={c.id}
-              onClick={() => setSelectedCoin(c)}
-              className={`p-4 rounded-xl transition-all ${
-                selectedCoin?.id === c.id 
-                  ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white' 
-                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">{c.symbol[0]}</span>
-                </div>
-                <div className="text-left">
-                  <div className="font-bold text-sm">{c.symbol}</div>
-                  <div className="text-xs opacity-70">{c.rank}</div>
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
-    </div>
-  );
-}
+export default RandomLottoParticipationEngine;

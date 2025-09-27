@@ -21,6 +21,10 @@
   --liquid-shadow: rgba(11, 61, 46, 0.15);
 }
 
+body {
+  font-family:'Iceland', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 /* Core Liquid Glass Container */
 .glass {
   position: relative;
