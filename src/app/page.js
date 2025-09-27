@@ -175,7 +175,7 @@ const SocialTask = () => {
             </svg>
           </div>
           <div>
-            <h3 className="text-white font-semibold">Join LBLX official X</h3>
+            <h3 className="text-white font-semibold">Join official X</h3>
             <p className="text-gray-300 text-xs">Follow on X for 1,000 LBLX Points</p>
           </div>
         </div>
@@ -513,13 +513,13 @@ function TelegramMiniApp() {
       {/* <DataCenterHome /> */}
       <SocialTask />
       {/* <EarningTimer /> */}
-      <UserBalance />
+      {/* <UserBalance /> */}
       {/* <NavigationButtons
         setActiveTab={handleTabNavigation}
         earningTimer={earningTimer}
         startEarningTimer={startEarningTimer}
       /> */}
-      <div className="h-14" />
+      <div className="h-20" />
     </div>
   );
 
