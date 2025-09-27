@@ -3,46 +3,46 @@ import "./globals.css";
 import Script from "next/script";
 
 export const metadata = {
-  title: "LabelX | AI-Powered Data Labeling Agent – $LBLX",
+  title: "RandomLotto Draw | Fair & Fun On-Chain Lottery – $RLT",
   description:
-    "LabelX ($LBLX) is an AI-powered data labeling and validation platform. It automates labeling tasks, enhances data accuracy with human-in-the-loop validation, and enables seamless team collaboration.",
+    "RandomLotto Draw ($RLT) is a blockchain-powered lottery where players join with USDT for a chance to win big. Fair draws, transparent rules, and token rewards for every participant.",
   keywords:
-    "LabelX, LBLX, AI labeling, data labeling, annotation, AI validation, human-in-the-loop, collaborative labeling, machine learning data, Web3 AI agent",
-  authors: [{ name: "LabelX" }],
-  creator: "LabelX AI",
-  publisher: "LabelX Labs",
+    "RandomLotto, RLT, crypto lottery, USDT lottery, blockchain lottery, fair draw, random draw, Web3 gaming, Telegram lottery app, on-chain lottery, rewards",
+  authors: [{ name: "RandomLotto Draw" }],
+  creator: "RandomLotto Labs",
+  publisher: "RandomLotto",
   robots: "index, follow",
   openGraph: {
-    title: "LabelX | AI-Powered Data Labeling Agent – $LBLX",
+    title: "RandomLotto Draw | Fair & Fun On-Chain Lottery – $RLT",
     description:
-      "LabelX ($LBLX) automates labeling tasks with AI agents, boosts data accuracy through validation, and empowers teams to collaborate on high-quality datasets.",
-    url: "https://labelx.vercel.app/",
-    siteName: "LabelX – $LBLX",
+      "Join RandomLotto Draw – a transparent, blockchain-powered lottery. Participate with USDT, earn RLT tokens, and win prizes in fair random draws.",
+    url: "https://randomlottodraw.com/",
+    siteName: "RandomLotto Draw – $RLT",
     type: "website",
     images: [
       {
-        url: "/og-labelx.png",
+        url: "/og-randomlotto.png",
         width: 1200,
         height: 630,
-        alt: "LabelX – AI Data Labeling Agent",
+        alt: "RandomLotto Draw – Blockchain Lottery",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LabelX | AI-Powered Data Labeling Agent – $LBLX",
+    title: "RandomLotto Draw | Fair & Fun On-Chain Lottery – $RLT",
     description:
-      "LabelX ($LBLX) brings AI automation + human validation together for next-gen data labeling and collaboration.",
-    creator: "@LabelX_AI",
-    images: ["/og-labelx.png"],
+      "RandomLotto Draw ($RLT) is a fair and transparent lottery powered by blockchain. Play with USDT, win prizes, and get rewarded in RLT tokens.",
+    creator: "@RandomLottoDraw",
+    images: ["/og-randomlotto.png"],
   },
   viewport:
     "width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover",
-  category: "AI Data Labeling",
+  category: "Blockchain Lottery",
   classification:
-    "AI Labeling Agent, Data Annotation, Machine Learning, Collaborative AI, Human-in-the-Loop",
+    "Crypto Lottery, USDT Draw, Web3 Gaming, Blockchain Rewards, Fair Lottery, Random Draw",
   other: {
-    "application-name": "LabelX AI",
+    "application-name": "RandomLotto Draw",
     "mobile-web-app-capable": "yes",
     "mobile-web-app-status-bar-style": "black-translucent",
     "format-detection": "telephone=no",
@@ -75,7 +75,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="antialiased min-h-screen bg-[#0D0D0F] flex flex-col font-[Space_Grotesk]">
         <Web3Provider>
-        {children}
+          {children}
         </Web3Provider>
       </body>
     </html>
