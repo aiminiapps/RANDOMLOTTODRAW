@@ -558,7 +558,7 @@ const RandomLottoParticipationEngine = () => {
   if (!isWalletConnected) {
     return (
       <div className="w-full max-w-md mx-auto space-y-4">
-        <div className="glass-warm rounded-3xl p-6 relative overflow-hidden">
+        <div className="glass rounded-3xl p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-400/10 to-transparent rounded-full blur-2xl"></div>
           
           <div className="glass-content relative z-10">
