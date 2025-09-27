@@ -311,7 +311,7 @@ const RandomLottoParticipationEngine = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className={`relative overflow-hidden rounded-2xl ${
-          isModal ? 'w-80 h-52' : 'w-full h-36'
+          isModal ? 'w-80 h-56' : 'w-full h-44'
         } ${isDemo ? 'opacity-75' : ''}`}
         style={{ 
           background: isDemo ? 
