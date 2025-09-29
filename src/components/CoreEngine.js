@@ -89,7 +89,7 @@ const GrayBoardingPassTicket = React.memo(({ pass, isModal = false, isDemoTicket
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={`relative overflow-hidden rounded-2xl ${
-        isModal ? 'w-80 h-80' : 'w-full h-64'
+        isModal ? 'w-80 h-96' : 'w-full h-[420px]'
       } cursor-pointer transition-all duration-300 shadow-lg`}
       style={{ 
         background: 'linear-gradient(135deg, #374151 0%, #4b5563 50%, #6b7280 100%)'
@@ -153,28 +153,28 @@ const GrayBoardingPassTicket = React.memo(({ pass, isModal = false, isDemoTicket
           {/* Flight details style info */}
           <div className="grid grid-cols-4 gap-4 text-sm mb-4">
             <div>
-              <div className="text-xs text-gray-400 mb-1">Draw Type</div>
+              <div className="text-[10px] text-gray-400 mb-1">Draw Type</div>
               <div className="font-bold text-white">
                 {ticketData.drawType?.replace(' Draw', '') || '1W'}
               </div>
             </div>
             
             <div>
-              <div className="text-xs text-gray-400 mb-1">Date</div>
-              <div className="font-bold text-white">
+              <div className="text-[10px] text-gray-400 mb-1">Date</div>
+              <div className="font-bold text-white text-[10px]">
                 {formatDate(ticketData.purchaseDate)}
               </div>
             </div>
             
             <div>
-              <div className="text-xs text-gray-400 mb-1">Round</div>
+              <div className="text-[10px] text-gray-400 mb-1">Round</div>
               <div className="font-bold text-white">
                 #{ticketData.roundValid || 15}
               </div>
             </div>
             
             <div>
-              <div className="text-xs text-gray-400 mb-1">Chances</div>
+              <div className="text-[10px] text-gray-400 mb-1">Chances</div>
               <div className="font-bold text-white">
                 {ticketData.drawingChances || ticketData.tickets || 1}
               </div>
@@ -242,7 +242,7 @@ const GrayBoardingPassTicket = React.memo(({ pass, isModal = false, isDemoTicket
         {/* Demo watermark */}
         {(isDemo || isGuest || isDemoRlt) && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-8xl font-black text-gray-600/20 rotate-12 select-none">
+            <div className="text-7xl font-black text-gray-700/10 rotate-12 select-none">
               {isGuest ? 'PREVIEW' : 'DEMO'}
             </div>
           </div>
