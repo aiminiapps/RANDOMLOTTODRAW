@@ -617,7 +617,7 @@ function TelegramMiniApp() {
           </div>
           
           {/* Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center z-50">
+        <div className="fixed bottom-0 left-0 right-0 flex justify-center z-40">
           <BottomNav
             activeTab={activeTab}
             setActiveTab={handleTabNavigation}
