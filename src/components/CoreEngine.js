@@ -13,6 +13,7 @@ import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { formatEther, formatUnits } from 'viem';
 import { useStore } from '@/lib/storage';
+import { Wallet2Icon } from 'lucide-react';
 
 // RLT Token Contract Configuration
 const RLT_CONTRACT_ADDRESS = '0x27FDc94c04Ea70D3B9FEFd1fB8f5508f94f6a815';
@@ -756,7 +757,7 @@ const EnhancedRandomLottoEngine = () => {
         return (
           <div className="space-y-4">
             {/* Updated Participation Section */}
-            <div className="glass-warm rounded-3xl p-6">
+            <div className="glass rounded-3xl p-6">
               <h3 className="text-lg font-bold text-white mb-4">Participate in RandomLotto Draw</h3>
               
               {/* Draw Type Selection */}
@@ -816,7 +817,6 @@ const EnhancedRandomLottoEngine = () => {
                 className="glass-button w-full py-4 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 <div className="flex items-center justify-center space-x-3">
-                  <FiTarget className="w-5 h-5" />
                   <span>Participate ({parseInt(uiState.participationAmount || 1) * uiState.selectedDrawType.price} RLT)</span>
                 </div>
               </button>
@@ -839,7 +839,7 @@ const EnhancedRandomLottoEngine = () => {
 
                 <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
                   <div 
-                    className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 h-3 rounded-full"
+                    className="bg-green-400 h-3 rounded-full"
                     style={{ width: `${Math.min((appState.poolTotal / appState.poolThreshold) * 100, 100)}%` }}
                   />
                 </div>
@@ -898,7 +898,7 @@ const EnhancedRandomLottoEngine = () => {
       transition={{ duration: 0.6 }}
     >
       {/* Header */}
-      <div className="glass-light rounded-3xl p-6">
+      <div className="glass rounded-3xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-black text-white">RandomLotto</h1>
@@ -912,16 +912,6 @@ const EnhancedRandomLottoEngine = () => {
               className="p-2 glass-dark rounded-xl hover:glass-light transition-all duration-200"
             >
               <FiHelpCircle className="w-4 h-4 text-gray-400" />
-            </button>
-            
-            <button
-              onClick={handleToggleSound}
-              className="p-2 glass-dark rounded-xl hover:glass-light transition-all duration-200"
-            >
-              {uiState.soundEnabled ? 
-                <FiVolume2 className="w-4 h-4 text-green-400" /> : 
-                <FiVolumeX className="w-4 h-4 text-gray-400" />
-              }
             </button>
           </div>
         </div>
@@ -971,14 +961,14 @@ const EnhancedRandomLottoEngine = () => {
           </div>
         ) : (
           <div className="text-center">
-            <FiTarget className="w-12 h-12 text-green-400 mx-auto mb-4" />
+            <CiWallet className="w-12 h-12 text-green-400 mx-auto mb-4" />
             <h2 className="text-lg font-bold text-white mb-2">Welcome to RandomLotto</h2>
             <p className="text-sm text-gray-300 mb-4">
               Experience blockchain lottery with RLT tokens
             </p>
             
             {isTelegram ? (
-              <div className="glass glass-particles p-4 rounded-xl">
+              <div className="glass glass-particles p-4 rounded-xl flex items-center justify-center">
                 <TonConnectButton />
               </div>
             ) : (
