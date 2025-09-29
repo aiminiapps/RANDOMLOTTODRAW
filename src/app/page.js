@@ -9,16 +9,13 @@ import { useTelegram } from '@/lib/useTelegram';
 import CustomLoader from '@/components/Loader';
 import BottomNav from '@/components/BottomNav';
 import InviteCenter from '@/components/InviteCenter';
-import DataCenterHome from '@/components/DataCenterHome';
 import { CheckCircle } from 'lucide-react';
 import PremiumLeaderboard from '@/components/Leaderboard';
 import Link from 'next/link';
-import MultiAgentChatHub from '@/components/MultiAgentChatHub';
 import { GoTasklist } from "react-icons/go";
 import ProjectInfo from '@/components/Info';
 import { FaInfo } from "react-icons/fa6";
 import TaskCenter from '@/components/TaskCenter';
-import RandomLottoLeaderboard from '@/components/Leaderboard';
 import RandomLottoParticipationEngine from '@/components/CoreEngine';
 
 
