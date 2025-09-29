@@ -3,20 +3,15 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FiCheck, FiLoader, FiAlertTriangle, FiTarget, FiZap, FiShield,
-  FiTrendingUp, FiDollarSign, FiGift, FiUsers, FiStar, FiCreditCard,
-  FiExternalLink, FiRefreshCw, FiAward, FiHash, FiCalendar, FiClock,
-  FiShoppingCart, FiCopy, FiFilm, FiScissors, FiPlay, FiPause,
-  FiVolume2, FiVolumeX, FiInfo, FiHelpCircle, FiTrendingDown,
-  FiBarChart3, FiPieChart, FiActivity, FiEye, FiEyeOff, FiSettings,
-  FiNavigation, FiMapPin
+  FiCheck, FiTarget, FiZap, FiShield,
+  FiTrendingUp, FiCopy, FiFilm, FiActivity, FiEye,
+  FiNavigation
 } from 'react-icons/fi';
 import { CiWallet } from "react-icons/ci";
-import { useAccount, useBalance, useDisconnect, useSwitchChain } from 'wagmi';
+import { useAccount, useBalance, useDisconnect } from 'wagmi';
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { formatEther, formatUnits } from 'viem';
-import { bsc } from 'wagmi/chains';
 import { useStore } from '@/lib/storage';
 
 // RLT Token Contract Configuration
