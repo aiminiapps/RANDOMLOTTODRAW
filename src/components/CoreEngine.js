@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FiCheck, FiTarget, FiZap, FiShield,
+  FiCheck, FiTarget, FiHelpCircle,
   FiTrendingUp, FiCopy, FiFilm, FiActivity, FiEye,
-  FiNavigation
+  FiNavigation, FiVolumeX, FiVolume2
 } from 'react-icons/fi';
 import { CiWallet } from "react-icons/ci";
-import { useAccount, useBalance, useDisconnect } from 'wagmi';
+import { useAccount, useBalance, useDisconnect, useSwitchChain } from 'wagmi';
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { formatEther, formatUnits } from 'viem';
