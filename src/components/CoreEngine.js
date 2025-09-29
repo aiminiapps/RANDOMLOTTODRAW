@@ -1,16 +1,31 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FiCheck, FiLoader, FiAlertTriangle, FiTarget, FiZap, FiShield,
-  FiTrendingUp, FiDollarSign, FiGift, FiUsers, FiStar, FiCreditCard,
-  FiExternalLink, FiRefreshCw, FiAward, FiHash, FiCalendar, FiClock,
-  FiShoppingCart, FiCopy, FiFilm, FiScissors, FiPlay, FiPause,
-  FiVolume2, FiVolumeX, FiInfo, FiHelpCircle, FiTrendingDown,
-   FiPieChart, FiActivity, FiEye, FiEyeOff, FiHome
+import { 
+  FiCheck, 
+  FiLoader, 
+  FiAlertTriangle,
+  FiTarget,
+  FiZap,
+  FiShield,
+  FiTrendingUp,
+  FiDollarSign,
+  FiGift,
+  FiUsers,
+  FiStar,
+  FiCreditCard,
+  FiExternalLink,
+  FiRefreshCw,
+  FiAward,
+  FiHash,
+  FiCalendar,
+  FiClock,
+  FiShoppingCart,
+  FiCopy,
+  FiFilm,
+  FiScissors
 } from 'react-icons/fi';
-import { IoBarChartOutline } from "react-icons/io5";
 import { CiWallet } from "react-icons/ci";
 import { useAccount, useBalance, useDisconnect, useSwitchChain } from 'wagmi';
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
@@ -21,293 +36,10 @@ import { bsc } from 'wagmi/chains';
 // RLT Token Contract Configuration
 const RLT_CONTRACT_ADDRESS = '0x27FDc94c04Ea70D3B9FEFd1fB8f5508f94f6a815';
 
-// Memoized Premium Ticket Component (Prevents re-rendering)
-const EnhancedPremiumTicket = React.memo(({ pass, isModal = false, isDemoTicket = false }) => {
-  const ticketData = isDemoTicket ? pass : pass;
-  const isDemo = isDemoTicket || ticketData.isDemo || ticketData.type === 'guest';
-  const isGuest = ticketData.type === 'guest';
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9, rotateY: -15 }}
-      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-      whileHover={{ scale: isModal ? 1 : 1.02, rotateY: 5 }}
-      className={`relative overflow-hidden rounded-3xl ${
-        isModal ? 'w-80 h-64' : 'w-full h-48' // Increased height significantly
-      } ${isDemo ? 'opacity-85' : ''} cursor-pointer shadow-2xl`}
-      style={{ 
-        background: isGuest ? 
-          'linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #4338ca 100%)' :
-          isDemo ? 
-            'linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%)' :
-            'linear-gradient(135deg, #0B3D2E 0%, #145A32 50%, #0B3D2E 100%)',
-        boxShadow: isDemo ? 
-          '0 10px 30px rgba(0,0,0,0.3)' : 
-          '0 15px 40px rgba(163, 255, 18, 0.2)'
-      }}
-    >
-      {/* Animated background particles */}
-      {!isDemo && (
-        <div className="absolute inset-0 overflow-hidden">
-          {Array.from({ length: 12 }, (_, i) => (
-            <motion.div
-              key={`particle-${i}`}
-              className="absolute w-1.5 h-1.5 bg-white/25 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [-15, 15, -15],
-                opacity: [0.2, 0.8, 0.2],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: i * 0.3,
-                ease: "easeInOut"
-              }}
-            />
-          ))}
-        </div>
-      )}
+// TON RLT Token Contract (hypothetical - you'd need the actual TON RLT contract)
+const TON_RLT_CONTRACT = 'EQC...'; // Your RLT token contract on TON
 
-      {/* Left perforated edge - wider */}
-      <div className="absolute left-0 top-0 h-full w-4 bg-gradient-to-b from-transparent via-white/15 to-transparent"></div>
-      <div className="absolute left-4 top-0 h-full border-l-2 border-dashed border-white/25"></div>
-      
-      {/* Ticket hole punches - more spaced */}
-      {Array.from({ length: 6 }, (_, i) => (
-        <div 
-          key={`hole-${i}`}
-          className="absolute left-1.5 w-2 h-2 bg-gray-900 rounded-full shadow-inner"
-          style={{ top: `${15 + i * 12}%` }}
-        />
-      ))}
-      
-      {/* Top status badges */}
-      <div className="absolute top-4 right-4 flex space-x-2">
-        {isGuest && (
-          <motion.div 
-            className="px-3 py-1.5 bg-indigo-500/90 rounded-full text-xs font-bold text-white shadow-lg"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            GUEST MODE
-          </motion.div>
-        )}
-        {isDemo && !isGuest && (
-          <div className="px-3 py-1.5 bg-gray-600/90 rounded-full text-xs font-bold text-gray-200 shadow-lg">
-            DEMO TICKET
-          </div>
-        )}
-        {!isDemo && !isGuest && (
-          <motion.div 
-            className="px-3 py-1.5 bg-green-500/90 rounded-full text-xs font-bold text-white shadow-lg"
-            animate={{ 
-              boxShadow: [
-                '0 0 10px rgba(34, 197, 94, 0.4)',
-                '0 0 20px rgba(34, 197, 94, 0.6)',
-                '0 0 10px rgba(34, 197, 94, 0.4)'
-              ]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            LIVE ENTRY
-          </motion.div>
-        )}
-      </div>
-
-      {/* Main watermark - larger and more prominent */}
-      {(isDemo || isGuest) && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <motion.div 
-            className="text-8xl font-black text-gray-600/8 rotate-12 select-none"
-            animate={{ opacity: [0.08, 0.15, 0.08] }}
-            transition={{ duration: 4, repeat: Infinity }}
-          >
-            {isGuest ? 'PREVIEW' : 'DEMO'}
-          </motion.div>
-        </div>
-      )}
-      
-      {/* Holographic scan line effect */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent transform -skew-x-12"
-        animate={{ x: [-200, 400] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 2 }}
-      />
-      
-      <div className="relative z-10 p-6 h-full flex flex-col justify-between ml-4">
-        {/* Header Section - More space */}
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-              >
-                <FiFilm className={`w-6 h-6 ${
-                  isGuest ? 'text-indigo-300' :
-                  isDemo ? 'text-gray-400' : 'text-green-400'
-                }`} />
-              </motion.div>
-              <h3 className={`font-bold text-lg ${
-                isGuest ? 'text-indigo-100' :
-                isDemo ? 'text-gray-300' : 'text-white'
-              }`}>
-                RandomLotto {isGuest ? 'PREVIEW' : isDemo ? 'DEMO' : ticketData.network}
-              </h3>
-            </div>
-            <p className={`text-sm font-mono tracking-wider ${
-              isGuest ? 'text-indigo-400' :
-              isDemo ? 'text-gray-500' : 'text-green-400'
-            }`}>
-              {ticketData.id}
-            </p>
-          </div>
-          
-          <div className="text-right">
-            <motion.div 
-              className={`text-4xl font-black ${
-                isGuest ? 'text-indigo-300' :
-                isDemo ? 'text-gray-400' : 'text-yellow-400'
-              }`}
-              animate={!isDemo ? { 
-                scale: [1, 1.1, 1],
-                textShadow: [
-                  '0 0 10px currentColor',
-                  '0 0 20px currentColor',
-                  '0 0 10px currentColor'
-                ]
-              } : {}}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              {ticketData.tickets}
-            </motion.div>
-            <div className={`text-sm font-medium ${
-              isGuest ? 'text-indigo-500' :
-              isDemo ? 'text-gray-500' : 'text-gray-300'
-            }`}>
-              {ticketData.tickets === 1 ? 'TICKET' : 'TICKETS'}
-            </div>
-          </div>
-        </div>
-        
-        {/* Middle Section - Movie ticket details with more space */}
-        <div className="space-y-3 flex-1 flex flex-col justify-center">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className={isGuest ? 'text-indigo-500' : isDemo ? 'text-gray-500' : 'text-gray-300'}>
-                  ROUND
-                </span>
-                <span className={`font-bold ${
-                  isGuest ? 'text-indigo-200' :
-                  isDemo ? 'text-gray-400' : 'text-white'
-                }`}>
-                  #{ticketData.roundValid || 15}
-                </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className={isGuest ? 'text-indigo-500' : isDemo ? 'text-gray-500' : 'text-gray-300'}>
-                  SEAT
-                </span>
-                <span className={`font-bold font-mono ${
-                  isGuest ? 'text-indigo-200' :
-                  isDemo ? 'text-gray-400' : 'text-white'
-                }`}>
-                  {isGuest ? 'PREV-A1' : isDemo ? 'DEMO-A1' : `${ticketData.network}-${ticketData.tickets}`}
-                </span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className={isGuest ? 'text-indigo-500' : isDemo ? 'text-gray-500' : 'text-gray-300'}>
-                  DATE
-                </span>
-                <span className={`font-bold ${
-                  isGuest ? 'text-indigo-200' :
-                  isDemo ? 'text-gray-400' : 'text-white'
-                }`}>
-                  {ticketData.purchaseDate ? ticketData.purchaseDate.toLocaleDateString() : new Date().toLocaleDateString()}
-                </span>
-              </div>
-              
-              {!isDemo && !isGuest && ticketData.rltSpent && (
-                <div className="flex justify-between">
-                  <span className="text-gray-300">PRICE</span>
-                  <span className="font-bold text-green-400">{ticketData.rltSpent} RLT</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Bottom Section - Status and elements */}
-        <div className="flex justify-between items-end">
-          <motion.div 
-            className={`px-4 py-2 rounded-full text-sm font-bold ${
-              isGuest ? 'bg-indigo-500/30 text-indigo-300' :
-              isDemo ? 'bg-gray-600/50 text-gray-300' : 'bg-green-500/20 text-green-400'
-            }`}
-            animate={!isDemo && !isGuest ? { 
-              boxShadow: [
-                '0 0 0 0 rgba(34, 197, 94, 0.4)',
-                '0 0 0 10px rgba(34, 197, 94, 0)',
-              ] 
-            } : {}}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            {isGuest ? 'PREVIEW MODE' : isDemo ? 'DEMO TICKET' : 'VALID ENTRY'}
-          </motion.div>
-          
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <FiScissors className={`w-4 h-4 ${
-              isGuest ? 'text-indigo-500' :
-              isDemo ? 'text-gray-500' : 'text-gray-400'
-            } rotate-90`} />
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Enhanced animated barcode */}
-      <div className="absolute bottom-3 left-10 right-6 h-8">
-        <div className="flex space-x-px h-full items-end overflow-hidden">
-          {Array.from({ length: 30 }, (_, i) => (
-            <motion.div 
-              key={`bar-${i}`}
-              className={`${
-                isGuest ? 'bg-indigo-400/70' :
-                isDemo ? 'bg-gray-600' : 'bg-white/40'
-              } w-0.5`}
-              style={{ height: `${25 + (i % 5) * 15}%` }}
-              animate={!isDemo ? {
-                opacity: [0.4, 1, 0.4],
-                scaleY: [0.8, 1.1, 0.8]
-              } : {}}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                delay: i * 0.05,
-                ease: "easeInOut"
-              }}
-            />
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-});
-
-EnhancedPremiumTicket.displayName = 'EnhancedPremiumTicket';
-
-const EnhancedRandomLottoEngine = () => {
+const RandomLottoParticipationEngine = () => {
   // Wagmi hooks for EVM wallets
   const { address, isConnected, connector, chainId } = useAccount();
   const { disconnect } = useDisconnect();
@@ -322,99 +54,55 @@ const EnhancedRandomLottoEngine = () => {
     token: RLT_CONTRACT_ADDRESS
   });
 
-  // Detect environment
+  // Detect Telegram environment
   const isTelegram = typeof window !== 'undefined' && !!window.Telegram?.WebApp;
   const isWrongNetwork = chainId && chainId !== bsc.id;
+  
+  // Use TON or EVM based on environment
   const isWalletConnected = isTelegram ? !!tonWallet : isConnected;
   const walletAddress = isTelegram ? tonWallet?.account?.address : address;
 
-  // Enhanced State Management
+  // Balance State (Real RLT only, no native tokens)
   const [balanceState, setBalanceState] = useState({
     rltBalance: '0',
-    nativeBalance: '0',
+    nativeBalance: '0', // For gas fees only
     isLoading: false,
-    tonRltBalance: '0'
+    tonRltBalance: '0' // RLT on TON network
   });
 
+  // Participation State
   const [participationState, setParticipationState] = useState({
+    amount: '',
+    isParticipating: false,
+    poolTotal: '0',
+    poolThreshold: '50000',
     myTickets: 0,
     myPasses: [],
     participationHistory: [],
-    demoTickets: [],
-    totalSpent: 0,
-    winChance: 0
+    demoTickets: [] // Demo tickets for users without RLT
   });
 
+  // App State
   const [appState, setAppState] = useState({
-    totalParticipants: 1247,
-    currentRound: 15,
-    lastDrawWinner: null,
-    poolTotal: '42350',
-    nextDrawTime: new Date(Date.now() + 2 * 60 * 60 * 1000),
-    recentWinners: [
-      { address: '0x1234...5678', amount: '2,500 RLT', time: '2h ago', round: 14 },
-      { address: '0xabcd...efgh', amount: '1,800 RLT', time: '4h ago', round: 14 },
-      { address: '0x9876...4321', amount: '3,200 RLT', time: '6h ago', round: 13 },
-      { address: '0x5555...9999', amount: '950 RLT', time: '8h ago', round: 13 },
-      { address: '0x7777...1111', amount: '1,200 RLT', time: '12h ago', round: 12 }
-    ]
+    simulatedBalances: {},
+    totalParticipants: 0,
+    currentRound: 1,
+    lastDrawWinner: null
   });
 
+  // UI State
   const [uiState, setUiState] = useState({
     error: null,
     showPassModal: false,
     activePass: null,
     showBuyModal: false,
-    copiedAddress: false,
-    showTutorial: false,
-    soundEnabled: true,
-    showStats: false,
-    currentView: 'home',
-    isDrawing: false,
-    showWinners: false,
-    animateBalance: false
+    copiedAddress: false
   });
 
   const [telegramUser, setTelegramUser] = useState(null);
-  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-  // Navigation tabs configuration
-  const navigationTabs = useMemo(() => [
-    { 
-      id: 'home', 
-      icon: FiHome, 
-      label: 'Home',
-      description: 'Main lottery dashboard'
-    },
-    { 
-      id: 'tickets', 
-      icon: FiFilm, 
-      label: 'Tickets',
-      description: 'Your lottery entries'
-    },
-    { 
-      id: 'stats', 
-      icon: IoBarChartOutline, 
-      label: 'Stats',
-      description: 'Live lottery statistics'
-    },
-    { 
-      id: 'history', 
-      icon: FiClock, 
-      label: 'History',
-      description: 'Past participation'
-    }
-  ], []);
-
-  // Memoized ticket data to prevent re-renders
-  const memoizedTickets = useMemo(() => ({
-    demoTickets: participationState.demoTickets,
-    realTickets: participationState.myPasses
-  }), [participationState.demoTickets, participationState.myPasses]);
-
-  // Initialize app
+  // Get Telegram user data
   useEffect(() => {
-    // Get Telegram user data
     try {
       const telegram = window?.Telegram?.WebApp;
       if (telegram?.initDataUnsafe?.user) {
@@ -427,650 +115,476 @@ const EnhancedRandomLottoEngine = () => {
     } catch (error) {
       console.log('Telegram WebApp not available');
     }
+  }, []);
 
-    // Initialize demo data for unconnected users
-    if (!isWalletConnected) {
-      const guestTickets = Array.from({ length: 2 }, (_, index) => ({
-        id: `GUEST-${Date.now()}-${index}`,
-        type: 'guest',
-        tickets: 1 + index,
-        network: 'DEMO',
-        purchaseDate: new Date(),
-        isDemo: true,
-        status: 'preview',
-        roundValid: 15
-      }));
-      
-      setParticipationState(prev => ({
-        ...prev,
-        demoTickets: guestTickets
-      }));
+  // Mock function to get TON RLT balance (replace with actual TON RLT contract call)
+  const getTonRltBalance = useCallback(async (address) => {
+    // Mock implementation - replace with actual TON RLT balance fetching
+    try {
+      // This would be replaced with actual TON RLT contract call
+      // For now, return 0 to simulate no RLT on TON
+      return '0';
+    } catch (error) {
+      console.error('Failed to fetch TON RLT balance:', error);
+      return '0';
     }
+  }, []);
 
-    // Start countdown timer
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = appState.nextDrawTime.getTime() - now;
-      
-      if (distance > 0) {
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        
-        setCountdown({ hours, minutes, seconds });
+  // Update balances when wallet connects
+  useEffect(() => {
+    const updateBalances = async () => {
+      if (walletAddress) {
+        if (isTelegram) {
+          // TON wallet - get RLT balance on TON network
+          const tonRlt = await getTonRltBalance(walletAddress);
+          setBalanceState({
+            rltBalance: '0', // No EVM RLT on TON
+            nativeBalance: '0', // TON native balance would be fetched separately
+            tonRltBalance: tonRlt,
+            isLoading: false
+          });
+        } else {
+          // EVM wallet - use real RLT balance on BSC
+          setBalanceState({
+            rltBalance: rltBalance ? formatUnits(rltBalance.value, rltBalance.decimals) : '0',
+            nativeBalance: bnbBalance ? formatEther(bnbBalance.value) : '0',
+            tonRltBalance: '0',
+            isLoading: false
+          });
+        }
+      } else {
+        setBalanceState({
+          rltBalance: '0',
+          nativeBalance: '0',
+          tonRltBalance: '0',
+          isLoading: false
+        });
       }
-    }, 1000);
+    };
 
-    return () => clearInterval(timer);
-  }, [isWalletConnected, appState.nextDrawTime]);
+    updateBalances();
+  }, [walletAddress, rltBalance, bnbBalance, isTelegram, getTonRltBalance]);
 
-  // Fixed Navigation Component with smooth transitions
-  const NavigationTabs = React.memo(() => (
-    <div className="glass rounded-3xl p-2 mb-6 shadow-xl">
-      <div className="flex space-x-1 relative">
-        {navigationTabs.map((tab, index) => {
-          const isActive = uiState.currentView === tab.id;
-          return (
-            <motion.button
-              key={tab.id}
-              onClick={() => {
-                setUiState(prev => ({ ...prev, currentView: tab.id }));
-                // Add haptic feedback for mobile
-                if ('vibrate' in navigator) {
-                  navigator.vibrate(10);
-                }
-              }}
-              className={`flex-1 flex flex-col items-center justify-center space-y-1 py-4 px-3 rounded-2xl font-medium transition-all duration-300 relative overflow-hidden ${
-                isActive
-                  ? 'glass-button text-white transform scale-105'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-              whileHover={{ scale: isActive ? 1.05 : 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {/* Active background indicator */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-blue-400/20 rounded-2xl"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-              )}
-              
-              <motion.div
-                animate={isActive ? { 
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 10, -10, 0]
-                } : {}}
-                transition={{ duration: 2, repeat: isActive ? Infinity : 0 }}
-              >
-                <tab.icon className={`w-5 h-5 ${isActive ? 'text-green-400' : ''}`} />
-              </motion.div>
-              <span className={`text-xs font-bold ${isActive ? 'text-white' : ''}`}>
-                {tab.label}
-              </span>
-              
-              {/* Active glow effect */}
-              {isActive && (
-                <motion.div
-                  className="absolute inset-0 rounded-2xl"
-                  animate={{
-                    boxShadow: [
-                      '0 0 20px rgba(163, 255, 18, 0.3)',
-                      '0 0 40px rgba(163, 255, 18, 0.5)',
-                      '0 0 20px rgba(163, 255, 18, 0.3)'
-                    ]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
-    </div>
-  ));
-
-  NavigationTabs.displayName = 'NavigationTabs';
-
-  // Enhanced content renderers with more information
-  const renderTicketsView = () => (
-    <motion.div 
-      className="space-y-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* My Tickets Section */}
-      <div className="glass rounded-3xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white flex items-center space-x-2">
-            <FiFilm className="w-6 h-6 text-green-400" />
-            <span>My Tickets</span>
-          </h3>
-          <div className="glass-dark rounded-2xl px-4 py-2">
-            <span className="text-green-400 font-bold">{memoizedTickets.realTickets.length}</span>
-            <span className="text-gray-400 text-sm ml-1">Active</span>
-          </div>
-        </div>
-        
-        {memoizedTickets.realTickets.length > 0 ? (
-          <div className="space-y-4">
-            {memoizedTickets.realTickets.map((pass, index) => (
-              <motion.div
-                key={pass.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <EnhancedPremiumTicket pass={pass} />
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <motion.div 
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <FiFilm className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg mb-2">No tickets yet</p>
-            <p className="text-gray-500 text-sm">Purchase RLT tokens to get lottery tickets</p>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Ticket Statistics */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="glass-dark rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-green-400 mb-1">
-            {participationState.totalSpent}
-          </div>
-          <div className="text-xs text-gray-400">RLT Spent</div>
-        </div>
-        <div className="glass-dark rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-blue-400 mb-1">
-            {(participationState.winChance || 0).toFixed(1)}%
-          </div>
-          <div className="text-xs text-gray-400">Win Chance</div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const renderStatsView = () => (
-    <motion.div
-      className="space-y-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {/* Live Pool Stats */}
-      <div className="glass rounded-3xl p-6">
-        <h3 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-          <FiActivity className="w-6 h-6 text-green-400" />
-          <span>Live Statistics</span>
-          <motion.div
-            className="w-2 h-2 bg-green-400 rounded-full"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-        </h3>
-        
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <motion.div 
-            className="glass-dark rounded-2xl p-4 text-center"
-            whileHover={{ scale: 1.02 }}
-          >
-            <motion.div 
-              className="text-3xl font-bold text-green-400 mb-2"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              {appState.totalParticipants.toLocaleString()}
-            </motion.div>
-            <div className="text-sm text-gray-400">Total Players</div>
-            <div className="text-xs text-green-500 mt-1">+23 today</div>
-          </motion.div>
-          
-          <motion.div 
-            className="glass-dark rounded-2xl p-4 text-center"
-            whileHover={{ scale: 1.02 }}
-          >
-            <motion.div 
-              className="text-3xl font-bold text-blue-400 mb-2"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            >
-              {parseFloat(appState.poolTotal).toLocaleString()}
-            </motion.div>
-            <div className="text-sm text-gray-400">RLT Pool</div>
-            <div className="text-xs text-blue-500 mt-1">+1.2K today</div>
-          </motion.div>
-        </div>
-
-        {/* Pool Progress */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-300">Pool Progress</span>
-            <span className="text-sm text-white font-bold">
-              {((parseFloat(appState.poolTotal) / 100000) * 100).toFixed(1)}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-4 relative overflow-hidden">
-            <motion.div 
-              className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 h-4 rounded-full relative"
-              style={{ width: `${Math.min((parseFloat(appState.poolTotal) / 100000) * 100, 100)}%` }}
-              animate={{
-                background: [
-                  'linear-gradient(to right, #10b981, #3b82f6, #8b5cf6)',
-                  'linear-gradient(to right, #3b82f6, #8b5cf6, #10b981)',
-                  'linear-gradient(to right, #8b5cf6, #10b981, #3b82f6)',
-                  'linear-gradient(to right, #10b981, #3b82f6, #8b5cf6)'
-                ]
-              }}
-              transition={{ duration: 8, repeat: Infinity }}
-            >
-              <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Recent Winners */}
-        <div className="glass-cool rounded-2xl p-4">
-          <h4 className="text-white font-bold mb-4 flex items-center space-x-2">
-            <FiTrendingUp className="w-5 h-5 text-green-400" />
-            <span>Recent Winners</span>
-            <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
-              Last 24h
-            </span>
-          </h4>
-          <div className="space-y-3 max-h-60 overflow-y-auto">
-            {appState.recentWinners.map((winner, index) => (
-              <motion.div 
-                key={`winner-${index}`}
-                className="flex items-center justify-between p-3 glass-dark rounded-xl"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                    <FiAward className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-white font-mono">
-                      {winner.address}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Round #{winner.round} • {winner.time}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-green-400">
-                    {winner.amount}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="glass-dark rounded-2xl p-4 text-center">
-          <div className="text-lg font-bold text-purple-400">47.2%</div>
-          <div className="text-xs text-gray-400">Win Rate</div>
-        </div>
-        <div className="glass-dark rounded-2xl p-4 text-center">
-          <div className="text-lg font-bold text-yellow-400">2.3x</div>
-          <div className="text-xs text-gray-400">Avg Payout</div>
-        </div>
-        <div className="glass-dark rounded-2xl p-4 text-center">
-          <div className="text-lg font-bold text-cyan-400">156</div>
-          <div className="text-xs text-gray-400">Games Today</div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const renderHistoryView = () => (
-    <motion.div
-      className="space-y-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="glass rounded-3xl p-6">
-        <h3 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-          <FiClock className="w-6 h-6 text-blue-400" />
-          <span>Participation History</span>
-        </h3>
-        
-        {participationState.participationHistory.length > 0 ? (
-          <div className="space-y-4">
-            {participationState.participationHistory.map((activity, index) => (
-              <motion.div
-                key={activity.id}
-                className="glass-dark rounded-2xl p-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <FiCreditCard className="w-4 h-4 text-green-400" />
-                    </div>
-                    <div>
-                      <div className="text-white font-medium">
-                        {activity.type.replace('_', ' ').toUpperCase()}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {activity.timestamp.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-green-400 font-bold">
-                      {activity.amount} RLT
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {activity.tickets} tickets
-                    </div>
-                  </div>
-                </div>
-                <div className={`text-xs px-2 py-1 rounded-full inline-block ${
-                  activity.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
-                }`}>
-                  {activity.status.toUpperCase()}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <motion.div 
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <FiClock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg mb-2">No history yet</p>
-            <p className="text-gray-500 text-sm">Your lottery participation will appear here</p>
-          </motion.div>
-        )}
-      </div>
-
-      {/* History Summary */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="glass-dark rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-blue-400 mb-1">
-            {participationState.participationHistory.length}
-          </div>
-          <div className="text-xs text-gray-400">Total Entries</div>
-        </div>
-        <div className="glass-dark rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-green-400 mb-1">
-            {participationState.participationHistory.reduce((sum, activity) => sum + activity.amount, 0)}
-          </div>
-          <div className="text-xs text-gray-400">RLT Invested</div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  // Countdown Timer Component
-  const CountdownTimer = React.memo(() => (
-    <motion.div
-      className="glass-cool rounded-3xl p-6 mb-6"
-      animate={{ 
-        boxShadow: [
-          '0 0 20px rgba(163, 255, 18, 0.1)',
-          '0 0 30px rgba(163, 255, 18, 0.2)',
-          '0 0 20px rgba(163, 255, 18, 0.1)'
-        ]
-      }}
-      transition={{ duration: 3, repeat: Infinity }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-white font-bold flex items-center space-x-2">
-          <FiClock className="w-5 h-5 text-green-400" />
-          <span>Next Draw</span>
-        </h4>
-        <div className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">
-          Round #{appState.currentRound}
-        </div>
-      </div>
+  // Generate demo tickets for users without RLT
+  useEffect(() => {
+    if (walletAddress && !participationState.demoTickets.length) {
+      const currentRltBalance = isTelegram ? 
+        parseFloat(balanceState.tonRltBalance) : 
+        parseFloat(balanceState.rltBalance);
       
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Hours', value: countdown.hours, color: 'text-red-400' },
-          { label: 'Minutes', value: countdown.minutes, color: 'text-yellow-400' },
-          { label: 'Seconds', value: countdown.seconds, color: 'text-green-400' }
-        ].map((item, index) => (
-          <div key={item.label} className="text-center">
-            <motion.div 
-              className={`text-3xl font-black ${item.color}`}
-              animate={{ 
-                scale: index === 2 ? [1, 1.1, 1] : [1, 1.05, 1],
-                textShadow: [
-                  '0 0 10px currentColor',
-                  '0 0 20px currentColor',
-                  '0 0 10px currentColor'
-                ]
-              }}
-              transition={{ duration: 1, repeat: Infinity }}
-            >
-              {item.value.toString().padStart(2, '0')}
-            </motion.div>
-            <div className="text-sm text-gray-400 font-medium">{item.label}</div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  ));
-
-  CountdownTimer.displayName = 'CountdownTimer';
-
-  // Main Content Renderer with smooth transitions
-  const renderContent = () => {
-    switch (uiState.currentView) {
-      case 'tickets':
-        return renderTicketsView();
-      case 'stats':
-        return renderStatsView();
-      case 'history':
-        return renderHistoryView();
-      default:
-        return (
-          <motion.div 
-            className="space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <CountdownTimer />
-            
-            {/* Current Pool Status */}
-            <div className="glass-cool rounded-3xl p-6">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-                <FiTarget className="w-6 h-6 text-blue-400" />
-                <span>Current Prize Pool</span>
-              </h3>
-
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg text-gray-300">Total Pool</span>
-                  <motion.span 
-                    className="text-4xl font-bold text-white"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >
-                    {parseFloat(appState.poolTotal).toLocaleString()} RLT
-                  </motion.span>
-                </div>
-
-                <div className="w-full bg-gray-700 rounded-full h-4 relative overflow-hidden">
-                  <motion.div 
-                    className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 h-4 rounded-full relative"
-                    style={{ width: `${Math.min((appState.poolTotal / 100000) * 100, 100)}%` }}
-                    animate={{
-                      background: [
-                        'linear-gradient(to right, #10b981, #3b82f6, #8b5cf6)',
-                        'linear-gradient(to right, #3b82f6, #8b5cf6, #10b981)',
-                        'linear-gradient(to right, #8b5cf6, #10b981, #3b82f6)',
-                        'linear-gradient(to right, #10b981, #3b82f6, #8b5cf6)'
-                      ]
-                    }}
-                    transition={{ duration: 5, repeat: Infinity }}
-                  >
-                    <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
-                  </motion.div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <div className="text-2xl font-bold text-white">
-                      {appState.totalParticipants.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-400">Players</div>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <div className="text-2xl font-bold text-green-400">
-                      #{appState.currentRound}
-                    </div>
-                    <div className="text-sm text-gray-400">Round</div>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <div className="text-2xl font-bold text-purple-400">
-                      {participationState.myTickets}
-                    </div>
-                    <div className="text-sm text-gray-400">My Tickets</div>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        );
+      // If user has no RLT, generate demo tickets
+      if (currentRltBalance === 0) {
+        const demoTickets = Array.from({ length: 3 }, (_, index) => ({
+          id: `DEMO-${Date.now()}-${index}`,
+          type: 'demo',
+          tickets: 1,
+          network: isTelegram ? 'TON' : 'BSC',
+          purchaseDate: new Date(),
+          isDemo: true,
+          status: 'demo'
+        }));
+        
+        setParticipationState(prev => ({
+          ...prev,
+          demoTickets
+        }));
+      }
     }
+  }, [walletAddress, balanceState.rltBalance, balanceState.tonRltBalance, isTelegram, participationState.demoTickets.length]);
+
+  // Switch to BSC Network
+  const switchToBSC = useCallback(async () => {
+    if (switchChain && !isTelegram) {
+      try {
+        await switchChain({ chainId: bsc.id });
+      } catch (error) {
+        console.error('Failed to switch to BSC:', error);
+        setUiState(prev => ({ ...prev, error: 'Failed to switch network' }));
+      }
+    }
+  }, [switchChain, isTelegram]);
+
+  // Generate unique pass ID
+  const generatePassId = () => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 6);
+    const network = isTelegram ? 'TON' : 'BSC';
+    return `RLT-${network}-${timestamp.toString(36).toUpperCase()}-${random.toUpperCase()}`;
   };
 
-  const currentRltBalance = isTelegram ? balanceState.tonRltBalance : balanceState.rltBalance;
-  const hasEnoughRLT = parseFloat(currentRltBalance) >= 500;
+  // Generate pass pattern
+  const generatePassPattern = (passId, isDemo = false) => {
+    const seed = passId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    
+    if (isDemo) {
+      return 'repeating-linear-gradient(45deg, rgba(100,100,100,0.1) 0px, rgba(100,100,100,0.1) 10px, transparent 10px, transparent 20px)';
+    }
+    
+    const patterns = [
+      'repeating-linear-gradient(45deg, rgba(163,255,18,0.1) 0px, rgba(163,255,18,0.1) 10px, transparent 10px, transparent 20px)',
+      'repeating-linear-gradient(90deg, rgba(163,255,18,0.05) 0px, rgba(163,255,18,0.05) 15px, transparent 15px, transparent 30px)',
+      'radial-gradient(circle at 20% 80%, rgba(163,255,18,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(163,255,18,0.05) 0%, transparent 50%)',
+      'linear-gradient(135deg, rgba(163,255,18,0.08) 0%, transparent 50%, rgba(163,255,18,0.08) 100%)'
+    ];
+    return patterns[seed % patterns.length];
+  };
 
-  return (
-    <motion.div 
-      className="w-full max-w-md mx-auto space-y-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-      {/* Header - Enhanced */}
-      <div className="glass-light rounded-3xl p-6 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <motion.h1 
-              className="text-3xl font-black text-white"
-              animate={{ 
-                textShadow: [
-                  '0 0 20px rgba(163, 255, 18, 0.5)',
-                  '0 0 30px rgba(163, 255, 18, 0.8)',
-                  '0 0 20px rgba(163, 255, 18, 0.5)'
-                ]
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              RandomLotto
-            </motion.h1>
-            <p className="text-sm text-green-400 font-medium">Blockchain Lottery Platform</p>
+  // Purchase Pass with RLT
+  const purchasePass = useCallback(() => {
+    const requiredRLT = 500; // 500 RLT for a pass
+    const currentRltBalance = isTelegram ? 
+      parseFloat(balanceState.tonRltBalance) : 
+      parseFloat(balanceState.rltBalance);
+    
+    if (currentRltBalance < requiredRLT) {
+      setUiState(prev => ({ ...prev, showBuyModal: true }));
+      return;
+    }
+
+    const passId = generatePassId();
+    const newPass = {
+      id: passId,
+      purchaseDate: new Date(),
+      tickets: 5, // 500 RLT = 5 tickets
+      status: 'active',
+      pattern: generatePassPattern(passId),
+      roundValid: appState.currentRound,
+      rltSpent: requiredRLT,
+      network: isTelegram ? 'TON' : 'BSC',
+      isDemo: false,
+      type: 'premium'
+    };
+
+    setParticipationState(prev => ({
+      ...prev,
+      myPasses: [newPass, ...prev.myPasses],
+      myTickets: prev.myTickets + newPass.tickets,
+      poolTotal: (parseFloat(prev.poolTotal) + requiredRLT).toFixed(0),
+      participationHistory: [
+        {
+          id: Date.now(),
+          type: 'pass_purchase',
+          amount: requiredRLT,
+          tickets: newPass.tickets,
+          timestamp: new Date(),
+          status: 'confirmed'
+        },
+        ...prev.participationHistory
+      ]
+    }));
+
+    setAppState(prev => ({
+      ...prev,
+      totalParticipants: prev.totalParticipants + 1
+    }));
+
+    setUiState(prev => ({ 
+      ...prev, 
+      activePass: newPass,
+      showPassModal: true 
+    }));
+
+  }, [balanceState.rltBalance, balanceState.tonRltBalance, isTelegram, appState.currentRound]);
+
+  // Copy address to clipboard
+  const copyAddress = useCallback(async () => {
+    if (walletAddress) {
+      try {
+        await navigator.clipboard.writeText(walletAddress);
+        setUiState(prev => ({ ...prev, copiedAddress: true }));
+        setTimeout(() => {
+          setUiState(prev => ({ ...prev, copiedAddress: false }));
+        }, 2000);
+      } catch (error) {
+        console.error('Failed to copy address:', error);
+      }
+    }
+  }, [walletAddress]);
+
+  // Premium Movie-Style Ticket Component
+  const PremiumTicket = ({ pass, isModal = false, isDemoTicket = false }) => {
+    const ticketData = isDemoTicket ? pass : pass;
+    const isDemo = isDemoTicket || ticketData.isDemo;
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`relative overflow-hidden rounded-2xl ${
+          isModal ? 'w-80 h-56' : 'w-full h-44'
+        } ${isDemo ? 'opacity-75' : ''}`}
+        style={{ 
+          background: isDemo ? 
+            'linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%)' :
+            'linear-gradient(135deg, #0B3D2E 0%, #145A32 50%, #0B3D2E 100%)'
+        }}
+      >
+        {/* Movie ticket perforated edge */}
+        <div className="absolute left-0 top-0 h-full w-2 bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
+        <div className="absolute left-2 top-0 h-full border-l-2 border-dashed border-white/20"></div>
+        
+        {/* Ticket hole punches */}
+        <div className="absolute left-1 top-4 w-1 h-1 bg-gray-900 rounded-full"></div>
+        <div className="absolute left-1 top-8 w-1 h-1 bg-gray-900 rounded-full"></div>
+        <div className="absolute left-1 bottom-8 w-1 h-1 bg-gray-900 rounded-full"></div>
+        <div className="absolute left-1 bottom-4 w-1 h-1 bg-gray-900 rounded-full"></div>
+        
+        {/* Demo watermark overlay */}
+        {isDemo && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-6xl font-black text-gray-600/20 rotate-12 select-none">
+              DEMO
+            </div>
+          </div>
+        )}
+        
+        {/* Holographic effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 animate-pulse"></div>
+        
+        <div className="relative z-10 p-6 h-full flex flex-col justify-between ml-4">
+          {/* Header */}
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <FiFilm className={`w-4 h-4 ${isDemo ? 'text-gray-400' : 'text-green-400'}`} />
+                <h3 className={`font-bold text-sm ${isDemo ? 'text-gray-300' : 'text-white'}`}>
+                  RandomLotto {isDemo ? 'DEMO' : ticketData.network}
+                </h3>
+              </div>
+              <p className={`text-xs font-mono ${isDemo ? 'text-gray-500' : 'text-green-400'}`}>
+                {ticketData.id}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className={`text-2xl font-black ${isDemo ? 'text-gray-400' : 'text-yellow-400'}`}>
+                {ticketData.tickets}
+              </div>
+              <div className={`text-xs ${isDemo ? 'text-gray-500' : 'text-gray-300'}`}>
+                {ticketData.tickets === 1 ? 'TICKET' : 'TICKETS'}
+              </div>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setUiState(prev => ({ ...prev, showTutorial: true }))}
-              className="p-3 glass-dark rounded-xl hover:glass-light transition-all duration-200"
-            >
-              <FiHelpCircle className="w-5 h-5 text-gray-400" />
-            </button>
-            
-            <button
-              onClick={() => setUiState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
-              className="p-3 glass-dark rounded-xl hover:glass-light transition-all duration-200"
-            >
-              {uiState.soundEnabled ? 
-                <FiVolume2 className="w-5 h-5 text-green-400" /> : 
-                <FiVolumeX className="w-5 h-5 text-gray-400" />
-              }
-            </button>
+          {/* Movie ticket details */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className={isDemo ? 'text-gray-500' : 'text-gray-300'}>ROUND</span>
+              <span className={`font-bold ${isDemo ? 'text-gray-400' : 'text-white'}`}>
+                #{ticketData.roundValid || appState.currentRound}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className={isDemo ? 'text-gray-500' : 'text-gray-300'}>SEAT</span>
+              <span className={`font-bold font-mono ${isDemo ? 'text-gray-400' : 'text-white'}`}>
+                {isDemo ? 'DEMO-A1' : `${ticketData.network}-${ticketData.tickets}`}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className={isDemo ? 'text-gray-500' : 'text-gray-300'}>DATE</span>
+              <span className={`font-bold ${isDemo ? 'text-gray-400' : 'text-white'}`}>
+                {ticketData.purchaseDate ? ticketData.purchaseDate.toLocaleDateString() : new Date().toLocaleDateString()}
+              </span>
+            </div>
+            {!isDemo && ticketData.rltSpent && (
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-300">PRICE</span>
+                <span className="font-bold text-green-400">{ticketData.rltSpent} RLT</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Status badge */}
+          <div className="flex justify-between items-end">
+            <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+              isDemo ? 'bg-gray-600/50 text-gray-300' : 'bg-green-500/20 text-green-400'
+            }`}>
+              {isDemo ? 'DEMO TICKET' : 'VALID'}
+            </div>
+            <div className="text-right">
+              <FiScissors className={`w-3 h-3 ${isDemo ? 'text-gray-500' : 'text-gray-400'} rotate-90`} />
+            </div>
           </div>
         </div>
 
-        {isWalletConnected ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 glass-warm rounded-2xl flex items-center justify-center">
-                <FiCheck className="w-6 h-6 text-green-400" />
+        {/* Barcode at bottom */}
+        <div className="absolute bottom-2 left-8 right-4 h-6 bg-gradient-to-r from-transparent via-white/10 to-transparent">
+          <div className="flex space-x-px h-full items-end">
+            {Array.from({ length: 20 }, (_, i) => (
+              <div 
+                key={i} 
+                className={`${isDemo ? 'bg-gray-600' : 'bg-white/30'} w-0.5`}
+                style={{ height: `${20 + (i % 4) * 10}%` }}
+              />
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Buy RLT Modal
+  const BuyRLTModal = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={() => setUiState(prev => ({ ...prev, showBuyModal: false }))}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="glass-warm rounded-3xl p-6 max-w-sm w-full relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="glass-content relative z-10">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 glass-light rounded-3xl flex items-center justify-center mx-auto mb-4">
+              <FiShoppingCart className="w-8 h-8 text-green-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Need RLT Tokens?</h3>
+            <p className="text-sm text-gray-300">
+              You need at least 500 RLT to purchase a lottery pass
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="glass-dark rounded-2xl p-4 text-center">
+              <div className="text-2xl font-bold text-red-400 mb-1">
+                {isTelegram ? 
+                  parseFloat(balanceState.tonRltBalance).toFixed(0) + ' RLT' :
+                  parseFloat(balanceState.rltBalance).toFixed(0) + ' RLT'
+                }
               </div>
-              <div>
-                <p className="text-white font-bold text-lg">
-                  {telegramUser?.firstName || 'Player'}
-                </p>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(walletAddress);
-                    setUiState(prev => ({ ...prev, copiedAddress: true }));
-                    setTimeout(() => {
-                      setUiState(prev => ({ ...prev, copiedAddress: false }));
-                    }, 2000);
-                  }}
-                  className="text-sm text-gray-400 font-mono hover:text-white transition-colors flex items-center space-x-2"
-                >
-                  <span>{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</span>
-                  {uiState.copiedAddress ? 
-                    <FiCheck className="w-4 h-4 text-green-400" /> : 
-                    <FiCopy className="w-4 h-4" />
-                  }
-                </button>
+              <div className="text-sm text-gray-400">Current RLT Balance</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {isTelegram ? 'TON Network' : 'BSC Network'}
               </div>
             </div>
-            
-            <motion.div 
-              className="text-right"
-              animate={hasEnoughRLT ? { scale: [1, 1.05, 1] } : {}}
-              transition={{ duration: 2, repeat: Infinity }}
+
+            <button
+              onClick={() => {
+                if (isTelegram) {
+                  // Link to TON RLT DEX (would need actual TON DEX for RLT)
+                  window.open('https://dedust.io/', '_blank');
+                } else {
+                  // Link to PancakeSwap for RLT on BSC
+                  window.open('https://pancakeswap.finance/swap?inputCurrency=BNB&outputCurrency=' + RLT_CONTRACT_ADDRESS, '_blank');
+                }
+              }}
+              className="glass-button w-full py-4 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
             >
-              <div className={`text-2xl font-bold ${hasEnoughRLT ? 'text-green-400' : 'text-red-400'}`}>
-                {parseFloat(currentRltBalance).toLocaleString()}
+              <div className="flex items-center justify-center space-x-2">
+                <FiExternalLink className="w-5 h-5" />
+                <span>Buy RLT on {isTelegram ? 'DeDust' : 'PancakeSwap'}</span>
               </div>
-              <div className="text-sm text-gray-400">RLT Balance</div>
-            </motion.div>
-          </div>
-        ) : (
-          <div className="text-center">
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            </button>
+
+            <button
+              onClick={() => setUiState(prev => ({ ...prev, showBuyModal: false }))}
+              className="w-full py-3 text-gray-400 hover:text-white transition-colors"
             >
-              <FiTarget className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            </motion.div>
-            <h2 className="text-xl font-bold text-white mb-2">Welcome to RandomLotto</h2>
-            <p className="text-sm text-gray-300 mb-6">
-              Experience blockchain lottery with real RLT tokens
+              Cancel
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
+  // Pass Modal
+  const PassModal = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={() => setUiState(prev => ({ ...prev, showPassModal: false }))}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="glass rounded-3xl p-6 max-w-sm w-full relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="glass-content relative z-10">
+          <div className="text-center mb-6">
+            <FiCheck className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Ticket Purchased!</h3>
+            <p className="text-sm text-gray-300">
+              Your premium lottery ticket has been issued
             </p>
-            
+          </div>
+
+          {uiState.activePass && (
+            <div className="mb-6">
+              <PremiumTicket pass={uiState.activePass} isModal={true} />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="glass-dark rounded-2xl p-3 text-center">
+                <div className="text-lg font-bold text-green-400">{uiState.activePass?.tickets}</div>
+                <div className="text-xs text-gray-400">Tickets</div>
+              </div>
+              <div className="glass-dark rounded-2xl p-3 text-center">
+                <div className="text-lg font-bold text-white">#{appState.currentRound}</div>
+                <div className="text-xs text-gray-400">Round</div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setUiState(prev => ({ ...prev, showPassModal: false }))}
+              className="glass-button w-full py-3 rounded-2xl font-bold text-white"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
+  const hasEnoughRLT = isTelegram ? 
+    parseFloat(balanceState.tonRltBalance) >= 500 :
+    parseFloat(balanceState.rltBalance) >= 500;
+
+  const currentRltBalance = isTelegram ? balanceState.tonRltBalance : balanceState.rltBalance;
+
+  // Not connected state
+  if (!isWalletConnected) {
+    return (
+      <div className="w-full max-w-md mx-auto space-y-4">
+        <div className="glass rounded-3xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-400/10 to-transparent rounded-full blur-2xl"></div>
+          
+          <div className="glass-content relative z-10">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 glass-light rounded-3xl flex items-center justify-center mx-auto mb-4 relative">
+                <CiWallet className="w-8 h-8 text-green-400" />
+                <div className="absolute inset-0 bg-green-400/20 rounded-3xl animate-pulse"></div>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Connect Your Wallet</h2>
+              <p className="text-sm text-gray-300 leading-relaxed">
+                Connect your wallet to participate in RandomLotto draws using RLT tokens
+              </p>
+            </div>
+
             {isTelegram ? (
-              <div className="glass glass-particles p-4 rounded-xl">
-                <TonConnectButton />
+              <div className="glass glass-particles p-4 rounded-xl mb-6">
+                <div className="flex flex-col items-center space-y-3">
+                  <h3 className="text-white font-bold flex items-center space-x-2">
+                    <CiWallet />
+                    <span>Connect TON Wallet</span>
+                  </h3>
+                  <TonConnectButton />
+                  <p className="text-gray-400 text-xs text-center">
+                    Connect to access RLT tokens on TON network
+                  </p>
+                </div>
               </div>
             ) : (
               <button
@@ -1078,100 +592,364 @@ const EnhancedRandomLottoEngine = () => {
                 className="glass-button w-full py-4 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
               >
                 <div className="flex items-center justify-center space-x-3">
-                  <CiWallet className="w-6 h-6" />
+                  <CiWallet className="w-5 h-5" />
                   <span>Connect Wallet</span>
                 </div>
               </button>
             )}
-          </div>
-        )}
-      </div>
 
-      {/* Navigation Tabs */}
-      <NavigationTabs />
-
-      {/* Demo/Guest Tickets for unconnected users */}
-      {!isWalletConnected && memoizedTickets.demoTickets.length > 0 && (
-        <motion.div 
-          className="glass rounded-3xl p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-            <FiEye className="w-6 h-6 text-indigo-400" />
-            <span>Preview Tickets</span>
-            <div className="text-sm bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full">
-              Guest Mode
-            </div>
-          </h3>
-
-          <div className="space-y-4 mb-6">
-            {memoizedTickets.demoTickets.map((ticket, index) => (
-              <motion.div
-                key={ticket.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.2 }}
-              >
-                <EnhancedPremiumTicket pass={ticket} isDemoTicket={true} />
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="glass-dark rounded-2xl p-6 text-center">
-            <p className="text-gray-300 text-sm mb-4">
-              🎭 These are preview tickets showing how the lottery system works.
-            </p>
-            <p className="text-indigo-400 text-sm mb-6">
-              Connect your wallet and get RLT tokens to participate in real draws!
-            </p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setUiState(prev => ({ ...prev, showTutorial: true }))}
-                className="glass py-3 px-4 rounded-xl text-white font-medium border border-gray-600/30 hover:border-indigo-400/50 transition-all duration-300"
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <FiInfo className="w-4 h-4" />
-                  <span>How it Works</span>
+            {uiState.error && (
+              <div className="mt-4 p-4 glass-dark border-2 border-red-400/30 rounded-2xl">
+                <div className="flex items-center space-x-2">
+                  <FiAlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                  <p className="text-red-400 text-sm">{uiState.error}</p>
                 </div>
+              </div>
+            )}
+
+            <div className="mt-6 space-y-3">
+              <div className="glass-cool rounded-2xl p-4">
+                <div className="flex items-center space-x-3">
+                  <FiShield className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <h4 className="text-white font-bold text-sm">RLT Token Required</h4>
+                    <p className="text-xs text-gray-400">Uses RLT tokens on {isTelegram ? 'TON' : 'BSC'} network</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-cool rounded-2xl p-4">
+                <div className="flex items-center space-x-3">
+                  <FiFilm className="w-5 h-5 text-purple-400" />
+                  <div>
+                    <h4 className="text-white font-bold text-sm">Premium Tickets</h4>
+                    <p className="text-xs text-gray-400">Movie-style lottery tickets with unique IDs</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div 
+      className="w-full max-w-md mx-auto space-y-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Wrong Network Warning for EVM */}
+      {!isTelegram && isWrongNetwork && (
+        <div className="glass border-2 border-yellow-400/30 rounded-2xl p-4">
+          <div className="flex items-center space-x-2 mb-3">
+            <FiAlertTriangle className="w-5 h-5 text-yellow-400" />
+            <p className="text-yellow-400 font-bold">Wrong Network</p>
+          </div>
+          <p className="text-gray-300 text-sm mb-3">
+            Please switch to Binance Smart Chain to access RLT tokens
+          </p>
+          <button
+            onClick={switchToBSC}
+            className="glass-button w-full py-2 rounded-xl text-white font-medium"
+          >
+            Switch to BSC
+          </button>
+        </div>
+      )}
+
+      {/* Wallet Header */}
+      <div className="glass rounded-3xl p-6">
+        <div className="glass-content">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 glass-warm rounded-2xl flex items-center justify-center">
+                <FiCheck className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <p className="text-white font-bold">
+                  {telegramUser?.firstName || 'Player'}
+                </p>
+                <button
+                  onClick={copyAddress}
+                  className="text-sm text-gray-400 font-mono hover:text-white transition-colors flex items-center space-x-1"
+                >
+                  <span>{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</span>
+                  {uiState.copiedAddress ? (
+                    <FiCheck className="w-3 h-3 text-green-400" />
+                  ) : (
+                    <FiCopy className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  // Refresh balances would go here
+                }}
+                disabled={balanceState.isLoading}
+                className="p-2 glass-dark rounded-xl hover:glass-light transition-all duration-200"
+              >
+                <FiRefreshCw className={`w-4 h-4 text-gray-400 ${balanceState.isLoading ? 'animate-spin' : ''}`} />
               </button>
-              
               <button
                 onClick={() => {
                   if (isTelegram) {
-                    // Show TON Connect
+                    // TON disconnect would be handled by TonConnect
                   } else {
-                    open();
+                    disconnect();
                   }
                 }}
-                className="glass-button py-3 px-4 rounded-xl text-white font-medium hover:scale-105 transition-all duration-300"
+                className="text-xs text-gray-400 hover:text-white transition-colors"
               >
-                <div className="flex items-center justify-center space-x-2">
-                  <CiWallet className="w-4 h-4" />
-                  <span>Get Started</span>
-                </div>
+                Disconnect
               </button>
             </div>
           </div>
-        </motion.div>
+
+          {/* Enhanced Balance Display - RLT Only */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="glass-dark rounded-2xl p-4 text-center relative overflow-hidden">
+              {balanceState.isLoading && (
+                <div className="absolute inset-0 bg-gray-800/50 flex items-center justify-center rounded-2xl">
+                  <FiLoader className="w-4 h-4 animate-spin text-gray-400" />
+                </div>
+              )}
+              <div className={`text-lg font-bold ${!hasEnoughRLT ? 'text-red-400' : 'text-white'}`}>
+                {parseFloat(currentRltBalance).toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-400">RLT Balance</div>
+              <div className="text-xs text-green-400 mt-1">{isTelegram ? 'TON Network' : 'BSC Network'}</div>
+            </div>
+            
+            <div className="glass-dark rounded-2xl p-4 text-center">
+              <div className="text-lg font-bold text-green-400">
+                {participationState.myTickets}
+              </div>
+              <div className="text-xs text-gray-400">My Tickets</div>
+              <div className="text-xs text-blue-400 mt-1">Active</div>
+            </div>
+          </div>
+
+          {/* Network & Gas Info */}
+          <div className="glass-cool rounded-2xl p-4 mb-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-300">Network</span>
+              <span className="text-sm font-bold text-white">
+                {isTelegram ? 'TON' : 'BSC'} • RLT Token
+              </span>
+            </div>
+            {!isTelegram && (
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-300">Gas Balance</span>
+                <span className="text-sm font-bold text-blue-400">
+                  {parseFloat(balanceState.nativeBalance).toFixed(4)} BNB
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            {!hasEnoughRLT ? (
+              <button
+                onClick={() => setUiState(prev => ({ ...prev, showBuyModal: true }))}
+                className="glass-button py-3 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <FiShoppingCart className="w-4 h-4" />
+                  <span>Buy RLT</span>
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={purchasePass}
+                className="glass-button py-3 rounded-2xl font-bold text-white hover:scale-105 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <FiFilm className="w-4 h-4" />
+                  <span>Buy Ticket</span>
+                </div>
+              </button>
+            )}
+            
+            <button
+              onClick={() => {
+                const explorerUrl = isTelegram ?
+                  `https://tonscan.org/address/${walletAddress}` :
+                  `https://bscscan.com/address/${walletAddress}`;
+                window.open(explorerUrl, '_blank');
+              }}
+              className="glass-button py-3 rounded-2xl font-bold text-white border-2 border-gray-600/30 hover:border-green-400/50 transition-all duration-300"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <FiExternalLink className="w-4 h-4" />
+                <span>Explorer</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Demo Tickets Section (for users without RLT) */}
+      {participationState.demoTickets.length > 0 && parseFloat(currentRltBalance) === 0 && (
+        <div className="glass rounded-3xl p-6">
+          <div className="glass-content">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+              <FiFilm className="w-5 h-5 text-gray-400" />
+              <span>Demo Tickets</span>
+              <span className="text-sm text-gray-400">(Preview Only)</span>
+            </h3>
+
+            <div className="space-y-3 mb-4">
+              {participationState.demoTickets.map((ticket, index) => (
+                <PremiumTicket key={ticket.id} pass={ticket} isDemoTicket={true} />
+              ))}
+            </div>
+
+            <div className="glass-dark rounded-2xl p-4 text-center">
+              <p className="text-gray-400 text-sm mb-2">
+                These are demo tickets. Purchase RLT tokens to get real lottery tickets.
+              </p>
+              <button
+                onClick={() => setUiState(prev => ({ ...prev, showBuyModal: true }))}
+                className="glass-button py-2 px-4 rounded-xl text-white font-medium text-sm"
+              >
+                Get RLT to Play
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Main Content with smooth transitions */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={uiState.currentView}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderContent()}
-        </motion.div>
+      {/* My Real Tickets Section */}
+      {participationState.myPasses.length > 0 && (
+        <div className="glass rounded-3xl p-6">
+          <div className="glass-content">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+              <FiFilm className="w-5 h-5 text-green-400" />
+              <span>My Tickets</span>
+              <span className="text-sm text-gray-400">({participationState.myPasses.length})</span>
+            </h3>
+
+            <div className="space-y-3">
+              {participationState.myPasses.slice(0, 3).map((pass, index) => (
+                <PremiumTicket key={pass.id} pass={pass} />
+              ))}
+            </div>
+
+            {participationState.myPasses.length > 3 && (
+              <button className="w-full mt-3 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+                View All Tickets ({participationState.myPasses.length})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pool Status */}
+      <div className="glass rounded-2xl p-6">
+        <div className="glass-content">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <FiTarget className="w-5 h-5 text-blue-400" />
+            <span>Current Draw</span>
+          </h3>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-300">Prize Pool</span>
+              <span className="text-lg font-bold text-white">
+                {parseFloat(participationState.poolTotal).toLocaleString()} RLT
+              </span>
+            </div>
+
+            <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 h-3 rounded-full transition-all duration-1000 relative"
+                style={{ 
+                  width: `${Math.min((participationState.poolTotal / participationState.poolThreshold) * 100, 100)}%` 
+                }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-sm font-bold text-white">
+                  {appState.totalParticipants.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-400">Players</div>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-green-400">
+                  #{appState.currentRound}
+                </div>
+                <div className="text-xs text-gray-400">Round</div>
+              </div>
+              <div>
+                <div className="text-sm font-bold text-purple-400">
+                  {participationState.myTickets}
+                </div>
+                <div className="text-xs text-gray-400">My Tickets</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Display */}
+      <AnimatePresence>
+        {uiState.error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="glass-dark border-2 border-red-400/30 rounded-2xl p-4"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FiAlertTriangle className="w-5 h-5 text-red-400" />
+                <p className="text-red-400 text-sm">{uiState.error}</p>
+              </div>
+              <button
+                onClick={() => setUiState(prev => ({ ...prev, error: null }))}
+                className="text-xs text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Info Card */}
+      <div className="glass-cool rounded-2xl p-4">
+        <div className="glass-content">
+          <div className="flex items-start space-x-3">
+            <FiShield className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-white font-bold mb-1">RLT Token Lottery</h4>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Purchase premium movie-style tickets with RLT tokens. 500 RLT = 5 tickets. 
+                {parseFloat(currentRltBalance) === 0 && ' Demo tickets shown - get RLT to participate!'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {uiState.showPassModal && <PassModal />}
+        {uiState.showBuyModal && <BuyRLTModal />}
       </AnimatePresence>
     </motion.div>
   );
 };
 
-export default EnhancedRandomLottoEngine;
+export default RandomLottoParticipationEngine;
